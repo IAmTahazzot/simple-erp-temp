@@ -1,0 +1,6 @@
+export default {
+    title: "সিম্পল ইআরপি",
+    subtitle: 'আপনার ব্যবসার হিসাব হবে খুব সহজ',
+    searchPlaceholder: 'সার্চ করুন',
+    currentInput: 'বর্তমান ইনপুট: {{value}}'
+} as const;
