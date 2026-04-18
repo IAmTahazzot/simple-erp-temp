@@ -62,7 +62,7 @@ export const NavigationBar = () => {
         if (id === activeTab) return
 
         setActiveTab(id)
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid)
     }
 
     const animatedPillStyle = useAnimatedStyle(() => ({
