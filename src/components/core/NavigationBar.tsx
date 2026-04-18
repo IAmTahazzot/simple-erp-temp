@@ -3,10 +3,15 @@ import * as Haptics from 'expo-haptics'
 import { useState } from "react"
 import { Pressable, StyleSheet, Text, View } from "react-native"
 import Animated, {
+    FadeIn,
+    FadeOut,
+    LinearTransition,
     useAnimatedStyle,
     useSharedValue,
     withSpring
 } from "react-native-reanimated"
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const TABS = [
     { id: 'home', icon: HomeIcon, label: 'Home' },
@@ -17,6 +22,7 @@ const TABS = [
 
 export const NavigationBar = () => {
     const [activeTab, setActiveTab] = useState('home')
+    const [arrivedTab, setArrivedTab] = useState('home')
     const [layouts, setLayouts] = useState<Record<string, { x: number, width: number }>>({})
 
     // Shared values for the active pill animation
@@ -24,13 +30,31 @@ export const NavigationBar = () => {
     const pillWidth = useSharedValue(0)
 
     const onTabLayout = (id: string, x: number, width: number) => {
-        const newLayouts = { ...layouts, [id]: { x, width } }
-        setLayouts(newLayouts)
+        setLayouts(prev => {
+            if (prev[id]?.x === x && prev[id]?.width === width) {
+                return prev
+            }
+            return { ...prev, [id]: { x, width } }
+        })
 
-        // Initialize position if it's the active tab
+        // Initialize or animate position if it's the active tab
         if (id === activeTab) {
-            pillX.value = x
-            pillWidth.value = width
+            if (pillWidth.value === 0) {
+                pillX.value = x
+                pillWidth.value = width
+                setArrivedTab(activeTab)
+            } else {
+                const currentX = pillX.value
+                const distance = Math.abs(currentX - x)
+                // Base delay of 90ms + extra time for longer travel distances
+                const dynamicDelay = 90 + (distance * 0.6)
+
+                pillX.value = withSpring(x, { damping: 40, stiffness: 200 })
+                setTimeout(() => {
+                    setArrivedTab(activeTab)
+                }, dynamicDelay)
+                pillWidth.value = withSpring(width, { damping: 40, stiffness: 200 })
+            }
         }
     }
 
@@ -39,12 +63,6 @@ export const NavigationBar = () => {
 
         setActiveTab(id)
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-
-        const layout = layouts[id]
-        if (layout) {
-            pillX.value = withSpring(layout.x, { damping: 18, stiffness: 150 })
-            pillWidth.value = withSpring(layout.width, { damping: 18, stiffness: 150 })
-        }
     }
 
     const animatedPillStyle = useAnimatedStyle(() => ({
@@ -63,22 +81,36 @@ export const NavigationBar = () => {
                     {TABS.map((tab) => {
                         const Icon = tab.icon
                         const isActive = activeTab === tab.id
+                        const isArrived = arrivedTab === tab.id
 
                         return (
-                            <Pressable
+                            <AnimatedPressable
                                 key={tab.id}
+                                layout={LinearTransition.springify().damping(40).stiffness(200)}
                                 onLayout={(e) => onTabLayout(tab.id, e.nativeEvent.layout.x, e.nativeEvent.layout.width)}
                                 onPress={() => handlePress(tab.id)}
                                 style={styles.tabItem}
                             >
                                 <Icon
                                     size={24}
-                                    color={isActive ? '#FFF' : '#666'}
+                                    color={isActive && isArrived ? '#FFF' : '#666'}
                                 />
                                 {isActive && (
-                                    <Text style={styles.tabLabel}>{tab.label}</Text>
+                                    <Animated.View
+                                        layout={LinearTransition.springify().damping(30).stiffness(300)}
+                                        entering={FadeIn.duration(150)}
+                                        exiting={FadeOut.duration(150)}
+                                        style={{ overflow: 'hidden' }}
+                                    >
+                                        <Text
+                                            style={[styles.tabLabel, { color: isActive && isArrived ? '#FFF' : '#666' }]}
+                                            numberOfLines={1}
+                                        >
+                                            {tab.label}
+                                        </Text>
+                                    </Animated.View>
                                 )}
-                            </Pressable>
+                            </AnimatedPressable>
                         )
                     })}
                 </View>
@@ -103,7 +135,8 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        padding: 10,
+        paddingVertical: 15,
+        paddingHorizontal: 10,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 2
@@ -119,27 +152,31 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.08,
         shadowRadius: 12,
+        elevation: 3,
     },
     navContent: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 4, // subtle inner padding
+        justifyContent: 'space-between',
+        paddingHorizontal: 5,
     },
     activePill: {
         position: 'absolute',
-        height: 50, // slightly smaller than container height
+        top: 5,
+        left: 0,
+        height: 50,
         backgroundColor: '#000000f1',
-        borderRadius: 27,
-        top: 5, // center vertically in 64px height
+        borderRadius: 25,
     },
     tabItem: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: 14,
+        paddingHorizontal: 12,
         borderRadius: 25,
-        height: 54,
+        height: 50,
+        overflow: 'hidden',
     },
     tabLabel: {
         color: '#FFF',
