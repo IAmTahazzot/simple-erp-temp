@@ -1,25 +1,26 @@
 import { HomeIcon, ProfileCircleIcon, SalesIcon, SearchIcon, StatusUpIcon } from "@/components/icons"
-import { StyleSheet, View } from "react-native"
+import { StyleSheet, Text, View } from "react-native"
 
 export const NavigationBar = () => {
     return (
         <View style={styles.container}>
             <View style={styles.navigation}>
                 <View style={styles.navItem}>
-                    <HomeIcon size={28} />
+                    <HomeIcon size={26} />
+                    <Text>Home</Text>
                 </View>
                 <View style={styles.navItem}>
-                    <SalesIcon size={28} />
+                    <SalesIcon size={26} />
                 </View>
                 <View style={styles.navItem}>
-                    <StatusUpIcon size={28} />
+                    <StatusUpIcon size={26} />
                 </View>
                 <View style={styles.navItem}>
-                    <ProfileCircleIcon size={28} />
+                    <ProfileCircleIcon size={26} />
                 </View>
             </View>
             <View style={styles.centerButton}>
-                <SearchIcon size={28} />
+                <SearchIcon size={26} />
             </View>
         </View>
     )
@@ -35,25 +36,33 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        gap: 10,
+        gap: 2,
         backgroundColor: 'transparent'
 
     },
     navigation: {
-        height: 70,
+        height: 60,
         flex: 1,
         flexDirection: 'row',
         gap: 10,
         backgroundColor: '#fffffffb',
         borderRadius: 50,
+        borderWidth: 1,
+        borderColor: '#e9e9e9ff'
     },
     navItem: {
+        display: 'flex',
+        flexDirection: 'row',
+        gap: 4,
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        paddingHorizontal: 12,
+        flexShrink: 1,
+        flexGrow: 1,
     },
     centerButton: {
-        height: 70,
+        height: 60,
         aspectRatio: 1,
         borderRadius: 50,
         elevation: 20,
@@ -66,5 +75,7 @@ const styles = StyleSheet.create({
         },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
+        borderWidth: 1,
+        borderColor: '#e9e9e9ff'
     }
 })
