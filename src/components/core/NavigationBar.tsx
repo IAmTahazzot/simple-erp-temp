@@ -50,14 +50,14 @@ export const NavigationBar = () => {
             } else {
                 const currentX = pillX.value
                 const distance = Math.abs(currentX - x)
-                // Base delay of 90ms + extra time for longer travel distances
-                const dynamicDelay = 90 + (distance * 0.6)
+                // Base delay of 70ms + extra time for longer travel distances
+                const dynamicDelay = 60 + (distance * 0.3)
 
-                pillX.value = withSpring(x, { damping: 40, stiffness: 200 })
+                pillX.value = withSpring(x, { damping: 100, stiffness: 1300 })
                 setTimeout(() => {
                     setArrivedTab(activeTab)
                 }, dynamicDelay)
-                pillWidth.value = withSpring(width, { damping: 40, stiffness: 200 })
+                pillWidth.value = withSpring(width, { damping: 100, stiffness: 1300 })
             }
         }
     }
@@ -66,7 +66,7 @@ export const NavigationBar = () => {
         if (id === activeTab) return
 
         setActiveTab(id)
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid)
+        // Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid)
     }
 
     const animatedPillStyle = useAnimatedStyle(() => ({
@@ -90,7 +90,7 @@ export const NavigationBar = () => {
                         return (
                             <AnimatedPressable
                                 key={tab.id}
-                                layout={LinearTransition.springify().damping(40).stiffness(200)}
+                                layout={LinearTransition.springify().damping(35).stiffness(350)}
                                 onLayout={(e) => onTabLayout(tab.id, e.nativeEvent.layout.x, e.nativeEvent.layout.width)}
                                 onPress={() => handlePress(tab.id)}
                                 style={styles.tabItem}
@@ -101,7 +101,7 @@ export const NavigationBar = () => {
                                 />
                                 {isActive && (
                                     <Animated.View
-                                        layout={LinearTransition.springify().damping(30).stiffness(300)}
+                                        layout={LinearTransition.springify().damping(30).stiffness(400)}
                                         entering={FadeIn.duration(150)}
                                         exiting={FadeOut.duration(150)}
                                         style={{ overflow: 'hidden' }}
