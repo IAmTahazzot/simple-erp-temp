@@ -3,6 +3,7 @@ import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 
+import { Header } from '@/components/core/Header';
 import { NavigationBar } from '@/components/core/NavigationBar';
 import { Colors } from '@/constants/colors';
 import { initI18n } from '@/i18n';
@@ -32,19 +33,24 @@ export default function RootLayout() {
       }
     });
 
+    //setAppLanguage('en')
+
     return () => {
       active = false;
     };
+
   }, []);
 
   if (!fontsLoaded || !i18nReady) {
     return null;
   }
 
+
   return (
     <>
       <StatusBar backgroundColor={Colors.light.background} style='dark' translucent={false} />
       <View style={styles.root}>
+        <Header />
         <ScrollView style={styles.scrollView}>
           <Slot />
         </ScrollView>
