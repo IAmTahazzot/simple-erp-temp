@@ -1,6 +1,7 @@
-import { HomeIcon, ProfileCircleIcon, SalesIcon, SearchIcon, StatusUpIcon } from "@/components/icons"
+import { HomeIcon, ProductIcon, ProfileCircleIcon, SalesIcon, SearchIcon } from "@/components/icons"
+import { useHomeTranslation } from "@/i18n/useTypedTranslation"
 import * as Haptics from 'expo-haptics'
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Pressable, StyleSheet, Text, View } from "react-native"
 import Animated, {
     FadeIn,
@@ -13,21 +14,24 @@ import Animated, {
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-const TABS = [
-    { id: 'home', icon: HomeIcon, label: 'Home' },
-    { id: 'sales', icon: SalesIcon, label: 'Sales' },
-    { id: 'status', icon: StatusUpIcon, label: 'Status' },
-    { id: 'profile', icon: ProfileCircleIcon, label: 'Profile' },
-]
 
 export const NavigationBar = () => {
     const [activeTab, setActiveTab] = useState('home')
     const [arrivedTab, setArrivedTab] = useState('home')
     const [layouts, setLayouts] = useState<Record<string, { x: number, width: number }>>({})
+    const { t: tHome, i18n } = useHomeTranslation();
+    const isEn = i18n.language === 'en'
 
     // Shared values for the active pill animation
     const pillX = useSharedValue(0)
     const pillWidth = useSharedValue(0)
+
+    const TABS = useMemo(() => [
+        { id: 'home', icon: HomeIcon, label: tHome('home') },
+        { id: 'sales', icon: SalesIcon, label: tHome('sales') },
+        { id: 'products', icon: ProductIcon, label: tHome('products') },
+        { id: 'profile', icon: ProfileCircleIcon, label: tHome('contacts') },
+    ], [tHome])
 
     const onTabLayout = (id: string, x: number, width: number) => {
         setLayouts(prev => {
@@ -103,7 +107,7 @@ export const NavigationBar = () => {
                                         style={{ overflow: 'hidden' }}
                                     >
                                         <Text
-                                            style={[styles.tabLabel, { color: isActive && isArrived ? '#FFF' : '#666' }]}
+                                            style={[styles.tabLabel, { color: isActive && isArrived ? '#FFF' : '#666', fontFamily: isEn ? 'Inter_400Regular' : 'HindSiliguri' }]}
                                             numberOfLines={1}
                                         >
                                             {tab.label}
@@ -180,10 +184,9 @@ const styles = StyleSheet.create({
     },
     tabLabel: {
         color: '#FFF',
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '600',
         marginLeft: 8,
-        fontFamily: 'Inter_400Regular',
     },
     searchButtonWrapper: {
         width: 60,

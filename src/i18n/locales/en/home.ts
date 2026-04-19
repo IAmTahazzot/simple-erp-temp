@@ -4,10 +4,9 @@ export default {
     searchPlaceholder: 'Search',
     currentInput: 'Current Input: {{value}}',
 
-    tabs: {
-        home: 'Home',
-        sales: 'Sales',
-        status: 'Status',
-        profile: 'Profile'
-    }
+    home: 'Home',
+    sales: 'Sales',
+    status: 'Status',
+    contacts: 'Contacts',
+    products: 'Products',
 } as const;

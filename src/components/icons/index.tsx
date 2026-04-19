@@ -3,6 +3,7 @@ export { ArrowDownIcon } from './ArrowDownIcon';
 export { CallIcon } from './CallIcon';
 export { HomeIcon } from './HomeIcon';
 export { NotificationIcon } from './NotificationIcon';
+export { ProductIcon } from './ProductIcon';
 export { ProfileCircleIcon } from './ProfileCircleIcon';
 export { SalesIcon } from './SalesIcon';
 export { SearchIcon } from './SearchIcon';

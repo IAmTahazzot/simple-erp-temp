@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Colors } from '@/constants/colors';
 import { setAppLanguage } from '@/i18n';
@@ -19,7 +19,12 @@ export default function HomeScreen() {
   return (
     <View style={styles.megaContainer}>
       {/* dummy UI for testing scroll-view */}
-      {/* <View style={{ margin: 10 }}>
+      <View style={{ margin: 10, display: 'flex', flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center' }}>
+        <Pressable onPress={() => switchLanguage(activeLanguage === 'en' ? 'bn' : 'en')} style={{ padding: 10, backgroundColor: 'green', borderRadius: 10 }}>
+          <Text style={{ fontSize: 20, color: 'white' }}>{tHome("title")}</Text>
+        </Pressable>
+        <Text style={{ fontSize: 20, color: 'black' }}>{activeLanguage}</Text>
+
         <View style={{
           borderRadius: 20,
           overflow: 'hidden',
@@ -34,7 +39,7 @@ export default function HomeScreen() {
         }}>
           <Image source={require('@/assets/image.png')} style={{ width: '100%', height: 800, borderRadius: 20 }} />
         </View>
-      </View> */}
+      </View>
     </View>
   )
 
