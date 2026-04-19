@@ -1,4 +1,4 @@
-import { Inter_400Regular, useFonts } from '@expo-google-fonts/inter';
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, useFonts } from '@expo-google-fonts/inter';
 import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
@@ -12,7 +12,10 @@ export default function RootLayout() {
   const [i18nReady, setI18nReady] = useState(false);
 
   const [fontsLoaded] = useFonts({
-    Inter_400Regular,
+    InterRegular: Inter_400Regular,
+    InterMedium: Inter_500Medium,
+    InterSemiBold: Inter_600SemiBold,
+    InterBold: Inter_700Bold,
     HindSiliguri: require('@/assets/fonts/Hind Siliguri regular.ttf'),
     HindSiliguriMedium: require('@/assets/fonts/Hind Siliguri Medium.ttf'),
     HindSiliguriSemiBold: require('@/assets/fonts/Hind Siliguri SemiBold.ttf'),

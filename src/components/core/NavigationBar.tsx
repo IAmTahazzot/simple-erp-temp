@@ -107,7 +107,7 @@ export const NavigationBar = () => {
                                         style={{ overflow: 'hidden' }}
                                     >
                                         <Text
-                                            style={[styles.tabLabel, { color: isActive && isArrived ? '#FFF' : '#666', fontFamily: isEn ? 'Inter_400Regular' : 'HindSiliguri' }]}
+                                            style={[styles.tabLabel, { color: isActive && isArrived ? '#FFF' : '#666', fontFamily: isEn ? 'InterMedium' : 'HindSiliguri' }]}
                                             numberOfLines={1}
                                         >
                                             {tab.label}
@@ -185,7 +185,6 @@ const styles = StyleSheet.create({
     tabLabel: {
         color: '#FFF',
         fontSize: 13,
-        fontWeight: '600',
         marginLeft: 8,
     },
     searchButtonWrapper: {
