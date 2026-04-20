@@ -1,3 +1,4 @@
+import { DEFAULT_HEADER_HEIGHT } from "@/constants";
 import { StyleSheet, Text, View } from "react-native";
 
 export const ProductHeader = () => {
@@ -11,12 +12,7 @@ export const ProductHeader = () => {
 
 const styles = StyleSheet.create({
     productHeaderContainer: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 100,
-        backgroundColor: 'white',
+        height: DEFAULT_HEADER_HEIGHT,
         paddingHorizontal: 12,
         paddingVertical: 8,
         display: 'flex',
@@ -28,5 +24,6 @@ const styles = StyleSheet.create({
     productHeaderText: {
         fontSize: 20,
         fontFamily: 'InterBold',
+        color: '#fff'
     },
 });

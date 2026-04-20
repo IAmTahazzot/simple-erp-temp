@@ -7,26 +7,38 @@ interface BaseLayoutProps {
     head?: ReactNode;
 }
 
+// Module-level variable to track if the startup animation has run for the session
+let hasRunStartupAnimation = false;
+
 export const BaseLayout = ({ children, head }: BaseLayoutProps) => {
-    // Start the scroll container 150 pixels higher (covering the header area)
-    const translateY = useSharedValue(-150);
-    // Header starts completely transparent
+    // Capture if this is the first render
+    const isStartup = !hasRunStartupAnimation;
+
+    // Start the scroll container 150 pixels higher ONLY if it's startup, otherwise 0
+    const translateY = useSharedValue(isStartup ? -150 : 0);
+    // Header starts completely transparent every time
     const headerOpacity = useSharedValue(0);
-    // Slight downward offset for the header to slide up from
+    // Slight downward offset for the header to slide up from every time
     const headerTranslateY = useSharedValue(15);
 
     useEffect(() => {
-        // 1. Spring the scroll container down to its natural position (0)
-        translateY.value = withSpring(0, {
-            damping: 18,
-            stiffness: 100,
-            mass: 0.8,
-        });
+        let delay = 0;
 
-        // 2. Delay the header reveal slightly so it happens as the container settles
-        headerOpacity.value = withDelay(200, withTiming(1, { duration: 500 }));
-        headerTranslateY.value = withDelay(200, withTiming(0, { duration: 500 }));
-    }, []);
+        if (isStartup) {
+            // 1. Spring the scroll container down to its natural position (0)
+            translateY.value = withSpring(0, {
+                damping: 18,
+                stiffness: 100,
+                mass: 0.8,
+            });
+            hasRunStartupAnimation = true;
+            delay = 200; // Only delay the header reveal on startup to wait for the scrollContainer
+        }
+
+        // 2. Header reveal happens every time BaseLayout mounts
+        headerOpacity.value = withDelay(delay, withTiming(1, { duration: 500 }));
+        headerTranslateY.value = withDelay(delay, withTiming(0, { duration: 500 }));
+    }, [isStartup]);
 
     const animatedScrollStyle = useAnimatedStyle(() => {
         return {
