@@ -3,11 +3,10 @@ import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 
-import { Header } from '@/components/core/Header';
 import { NavigationBar } from '@/components/core/NavigationBar';
 import { Colors } from '@/constants/colors';
 import { initI18n } from '@/i18n';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 export default function RootLayout() {
   const [i18nReady, setI18nReady] = useState(false);
@@ -48,12 +47,9 @@ export default function RootLayout() {
 
   return (
     <>
-      <StatusBar backgroundColor={Colors.light.background} style='dark' translucent={false} />
+      <StatusBar backgroundColor={Colors.dark.background} />
       <View style={styles.root}>
-        <Header />
-        <ScrollView style={styles.scrollView}>
-          <Slot />
-        </ScrollView>
+        <Slot />
         <NavigationBar />
       </View>
     </>
@@ -63,9 +59,6 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: Colors.light.background,
-  },
-  scrollView: {
-    flex: 1,
-  },
+    backgroundColor: Colors.dark.background,
+  }
 });

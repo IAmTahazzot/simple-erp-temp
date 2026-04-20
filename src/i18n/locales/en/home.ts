@@ -9,4 +9,5 @@ export default {
     status: 'Status',
     contacts: 'Contacts',
     products: 'Products',
+    orders: 'Orders',
 } as const;

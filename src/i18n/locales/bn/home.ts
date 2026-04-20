@@ -8,4 +8,5 @@ export default {
     status: 'স্ট্যাটাস',
     contacts: 'কন্টাক্টস',
     products: 'প্রোডাক্টস',
+    orders: 'অর্ডারস',
 } as const;

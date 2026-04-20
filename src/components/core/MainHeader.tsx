@@ -1,22 +1,20 @@
+import { DEFAULT_HEADER_HEIGHT } from "@/constants"
 import { Image, StyleSheet, Text, View } from "react-native"
 import { NotificationIcon } from "../icons"
 
-export const Header = () => {
+export const MainHeader = () => {
     return (
         <View style={styles.headerContainer}>
-            <View>
+            <View style={styles.greetingsContainer}>
                 <View style={styles.profileGreetingWrapper}>
-                    <Image source={require('@/assets/placeholders/profile.png')} style={{ width: 40, height: 40, borderRadius: 20 }} />
+                    <Image source={require('@/assets/placeholders/profile.png')} style={{ width: 30, height: 30, borderRadius: 20 }} />
 
-                    <View style={styles.greetingsContainer}>
-                        <Text style={styles.greetingTitle}>John Doe</Text>
-                        <Text style={styles.greetingSubtitle}>Good Morning, John</Text>
-                    </View>
+                    <Text style={styles.greetingTitle}>WELCOME, John Doe</Text>
                 </View>
             </View>
-            <View style={styles.rightContainer}>
+            <View style={styles.actionContainer}>
                 <View style={styles.notificationIconContainer}>
-                    <NotificationIcon size={24} color='black' />
+                    <NotificationIcon size={24} color='white' />
                 </View>
             </View>
         </View>
@@ -25,12 +23,7 @@ export const Header = () => {
 
 const styles = StyleSheet.create({
     headerContainer: {
-        position: 'absolute',
-        top: 35,
-        left: 0,
-        right: 0,
-        zIndex: 100,
-        backgroundColor: 'transparent',
+        height: DEFAULT_HEADER_HEIGHT,
         paddingHorizontal: 12,
         paddingVertical: 8,
         display: 'flex',
@@ -43,44 +36,35 @@ const styles = StyleSheet.create({
         display: 'flex',
         flexDirection: 'row',
         gap: 12,
-        backgroundColor: 'white',
         borderRadius: 50,
         padding: 6,
         alignItems: 'center',
     },
 
     greetingsContainer: {
-        display: 'flex',
-        flexDirection: 'column',
-        marginRight: 16,
+        flex: 1,
     },
 
     greetingTitle: {
         fontSize: 14,
         fontFamily: 'InterBold',
-        textTransform: 'uppercase'
+        color: '#fff'
     },
 
-    greetingSubtitle: {
-        fontSize: 12,
-        color: '#9c9c9cff',
-        fontFamily: 'InterRegular',
-    },
-
-    rightContainer: {
+    actionContainer: {
         display: 'flex',
         flexDirection: 'row',
+        gap: 6
     },
 
     notificationIconContainer: {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'white',
         padding: 8,
         borderRadius: 50,
-        height: 40,
-        width: 40
+        height: 30,
+        width: 30
     },
 
 })

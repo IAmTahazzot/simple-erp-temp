@@ -1,6 +1,7 @@
 import { HomeIcon, ProductIcon, ProfileCircleIcon, SalesIcon, SearchIcon } from "@/components/icons"
 import { useHomeTranslation } from "@/i18n/useTypedTranslation"
 import * as Haptics from 'expo-haptics'
+import { useRouter } from "expo-router"
 import { useMemo, useState } from "react"
 import { Pressable, StyleSheet, Text, View } from "react-native"
 import Animated, {
@@ -16,6 +17,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 
 export const NavigationBar = () => {
+    const router = useRouter()
     const [activeTab, setActiveTab] = useState('home')
     const [arrivedTab, setArrivedTab] = useState('home')
     const [layouts, setLayouts] = useState<Record<string, { x: number, width: number }>>({})
@@ -27,10 +29,10 @@ export const NavigationBar = () => {
     const pillWidth = useSharedValue(0)
 
     const TABS = useMemo(() => [
-        { id: 'home', icon: HomeIcon, label: tHome('home') },
-        { id: 'sales', icon: SalesIcon, label: tHome('sales') },
-        { id: 'products', icon: ProductIcon, label: tHome('products') },
-        { id: 'profile', icon: ProfileCircleIcon, label: tHome('contacts') },
+        { id: 'home', icon: HomeIcon, label: tHome('home'), href: '/' },
+        { id: 'orders', icon: SalesIcon, label: tHome('orders'), href: '/orders' },
+        { id: 'products', icon: ProductIcon, label: tHome('products'), href: '/products' },
+        { id: 'contacts', icon: ProfileCircleIcon, label: tHome('contacts'), href: '/contacts' },
     ], [tHome])
 
     const onTabLayout = (id: string, x: number, width: number) => {
@@ -92,7 +94,10 @@ export const NavigationBar = () => {
                                 key={tab.id}
                                 layout={LinearTransition.springify().damping(35).stiffness(350)}
                                 onLayout={(e) => onTabLayout(tab.id, e.nativeEvent.layout.x, e.nativeEvent.layout.width)}
-                                onPress={() => handlePress(tab.id)}
+                                onPress={() => {
+                                    handlePress(tab.id)
+                                    router.navigate(tab.href as any)
+                                }}
                                 style={styles.tabItem}
                             >
                                 <Icon
