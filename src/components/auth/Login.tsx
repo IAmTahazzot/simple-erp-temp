@@ -1,6 +1,9 @@
+import { database } from '@/database';
+import User from '@/database/models/User';
 import { useAuthStore } from '@/store/authStore';
+import { Q } from '@nozbe/watermelondb';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -8,9 +11,26 @@ export default function Login() {
   const login = useAuthStore((state) => state.login);
 
   const handleLogin = async () => {
-    // Placeholder logic for now
-    if (email && password) {
-      await login({ id: '1', name: 'Demo User', email }, 'fake-jwt-token');
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    try {
+      // Find the user by email in WatermelonDB
+      const users = await database.collections.get<User>('users').query(
+        Q.where('email', email)
+      ).fetch();
+
+      const user = users[0];
+
+      if (user && user.password_hash === password) {
+        await login({ id: user.id, name: user.name, email: user.email }, 'local-auth-token');
+      } else {
+        Alert.alert('Login Failed', 'Invalid email or password');
+      }
+    } catch (e: any) {
+      Alert.alert('Error', 'An error occurred during login');
     }
   };
 

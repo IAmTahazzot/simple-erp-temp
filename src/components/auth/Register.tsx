@@ -1,6 +1,8 @@
+import { database } from '@/database';
+import User from '@/database/models/User';
 import { useAuthStore } from '@/store/authStore';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -9,9 +11,34 @@ export default function Register() {
   const login = useAuthStore((state) => state.login);
 
   const handleRegister = async () => {
-    // Placeholder logic for now, using login directly
-    if (name && email && password) {
-      await login({ id: '2', name, email }, 'fake-jwt-token-registered');
+    if (!name || !email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    try {
+      let createdUser: User | null = null;
+      
+      // Perform write within a database action
+      await database.write(async () => {
+        createdUser = await database.collections.get<User>('users').create((user) => {
+          user.name = name;
+          user.email = email;
+          // IMPORTANT: Do not store raw passwords in production.
+          // This must be hashed before saving!
+          user.password_hash = password; 
+        });
+      });
+
+      if (createdUser) {
+        // Registration success! Now log the user in via Zustand.
+        await login(
+          { id: createdUser.id, name: createdUser.name, email: createdUser.email }, 
+          'local-auth-token' // In an offline-only mode temporarily, you generate this token
+        );
+      }
+    } catch (e: any) {
+      Alert.alert('Registration Failed', e.message || 'Could not create user');
     }
   };
 
