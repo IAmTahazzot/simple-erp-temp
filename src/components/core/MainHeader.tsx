@@ -1,15 +1,22 @@
 import { DEFAULT_HEADER_HEIGHT } from "@/constants"
+import { useAuthStore } from "@/store/authStore"
 import { Image, StyleSheet, Text, View } from "react-native"
 import { NotificationIcon } from "../icons"
 
 export const MainHeader = () => {
+    const user = useAuthStore((state) => state.user)
+
+    if (!user) {
+        return <Text style={{color: 'white'}}>Unauthorized</Text>
+    }
+
     return (
         <View style={styles.headerContainer}>
             <View style={styles.greetingsContainer}>
                 <View style={styles.profileGreetingWrapper}>
                     <Image source={require('@/assets/placeholders/profile.png')} style={{ width: 30, height: 30, borderRadius: 20 }} />
 
-                    <Text style={styles.greetingTitle}>WELCOME, John Doe</Text>
+                    <Text style={styles.greetingTitle}>WELCOME, {user.name}</Text>
                 </View>
             </View>
             <View style={styles.actionContainer}>

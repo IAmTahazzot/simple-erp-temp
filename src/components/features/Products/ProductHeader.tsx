@@ -1,10 +1,17 @@
 import { DEFAULT_HEADER_HEIGHT } from "@/constants";
+import { useAuthStore } from "@/store/authStore";
 import { StyleSheet, Text, View } from "react-native";
 
 export const ProductHeader = () => {
+    const user = useAuthStore((state) => state.user)
+
+    if (!user) {
+        return <Text style={{color: 'white'}}>Unauthorized</Text>
+    }
+
     return (
         <View style={styles.productHeaderContainer}>
-            <Text style={styles.productHeaderText}>Products</Text>
+            <Text style={styles.productHeaderText}>Products {user.email}</Text>
             <View />
         </View>
     )

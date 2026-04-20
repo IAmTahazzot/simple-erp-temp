@@ -3,12 +3,15 @@ import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 
+import AuthScreen from '@/components/auth';
 import { NavigationBar } from '@/components/core/NavigationBar';
 import { Colors } from '@/constants/colors';
 import { initI18n } from '@/i18n';
+import { useAuthStore } from '@/store/authStore';
 import { StyleSheet, View } from 'react-native';
 
 export default function RootLayout() {
+  const { isLoggedIn, checkAuth, isLoading } = useAuthStore();
   const [i18nReady, setI18nReady] = useState(false);
 
   const [fontsLoaded] = useFonts({
@@ -26,32 +29,37 @@ export default function RootLayout() {
   useEffect(() => {
     let active = true;
 
+    checkAuth(); // Check for existing user token
+
     initI18n().finally(() => {
       if (active) {
         setI18nReady(true);
       }
     });
 
-    //setAppLanguage('en')
-
     return () => {
       active = false;
     };
-
   }, []);
 
-  if (!fontsLoaded || !i18nReady) {
+  if (!fontsLoaded || !i18nReady || isLoading) {
     return null;
   }
 
-
   return (
     <>
-      <StatusBar backgroundColor={Colors.dark.background} />
-      <View style={styles.root}>
-        <Slot />
-        <NavigationBar />
-      </View>
+      {isLoggedIn ? (
+        <View style={styles.root}>
+          <StatusBar backgroundColor={Colors.dark.background} style="light" />
+          <Slot />
+          <NavigationBar />
+        </View>
+      ) : (
+        <View style={{ flex: 1, backgroundColor: Colors.dark.background }}>
+          <StatusBar backgroundColor={Colors.dark.background} style="light" />
+          <AuthScreen />
+        </View>
+      )}
     </>
   );
 }
