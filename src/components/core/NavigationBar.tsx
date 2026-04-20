@@ -2,19 +2,8 @@ import { HomeIcon, ProductIcon, ProfileCircleIcon, SalesIcon, SearchIcon } from 
 import { useHomeTranslation } from "@/i18n/useTypedTranslation"
 import * as Haptics from 'expo-haptics'
 import { useRouter } from "expo-router"
-import { useMemo, useState } from "react"
-import { Pressable, StyleSheet, Text, View } from "react-native"
-import Animated, {
-    FadeIn,
-    FadeOut,
-    LinearTransition,
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring
-} from "react-native-reanimated"
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
+import { useMemo, useRef, useState } from "react"
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native"
 
 export const NavigationBar = () => {
     const router = useRouter()
@@ -25,8 +14,8 @@ export const NavigationBar = () => {
     const isEn = i18n.language === 'en'
 
     // Shared values for the active pill animation
-    const pillX = useSharedValue(0)
-    const pillWidth = useSharedValue(0)
+    const pillX = useRef(new Animated.Value(0)).current
+    const pillWidth = useRef(new Animated.Value(0)).current
 
     const TABS = useMemo(() => [
         { id: 'home', icon: HomeIcon, label: tHome('home'), href: '/' },
@@ -45,21 +34,36 @@ export const NavigationBar = () => {
 
         // Initialize or animate position if it's the active tab
         if (id === activeTab) {
-            if (pillWidth.value === 0) {
-                pillX.value = x
-                pillWidth.value = width
+            // Check if it's the first time setting width
+            // @ts-ignore
+            if (pillWidth._value === 0) {
+                pillX.setValue(x)
+                pillWidth.setValue(width)
                 setArrivedTab(activeTab)
             } else {
-                const currentX = pillX.value
+                // @ts-ignore
+                const currentX = pillX._value
                 const distance = Math.abs(currentX - x)
                 // Base delay of 70ms + extra time for longer travel distances
                 const dynamicDelay = 60 + (distance * 0.3)
 
-                pillX.value = withSpring(x, { damping: 100, stiffness: 1300 })
+                Animated.spring(pillX, {
+                    toValue: x,
+                    damping: 15,
+                    stiffness: 150,
+                    useNativeDriver: false // Width/Position animation can't easily use native driver for all properties in older RN, but standard x/width is fine here
+                }).start()
+
                 setTimeout(() => {
                     setArrivedTab(activeTab)
                 }, dynamicDelay)
-                pillWidth.value = withSpring(width, { damping: 100, stiffness: 1300 })
+
+                Animated.spring(pillWidth, {
+                    toValue: width,
+                    damping: 15,
+                    stiffness: 150,
+                    useNativeDriver: false
+                }).start()
             }
         }
     }
@@ -71,17 +75,12 @@ export const NavigationBar = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid)
     }
 
-    const animatedPillStyle = useAnimatedStyle(() => ({
-        transform: [{ translateX: pillX.value }],
-        width: pillWidth.value,
-    }))
-
     return (
         <View style={styles.outerContainer}>
             <View style={styles.navContainerWrapper}>
                 <View style={styles.navContent}>
                     {/* Active Pill Indicator */}
-                    <Animated.View style={[styles.activePill, animatedPillStyle]} />
+                    <Animated.View style={[styles.activePill, { transform: [{ translateX: pillX }], width: pillWidth }]} />
 
                     {/* Tabs */}
                     {TABS.map((tab) => {
@@ -90,9 +89,8 @@ export const NavigationBar = () => {
                         const isArrived = arrivedTab === tab.id
 
                         return (
-                            <AnimatedPressable
+                            <Pressable
                                 key={tab.id}
-                                layout={LinearTransition.springify().damping(35).stiffness(350)}
                                 onLayout={(e) => onTabLayout(tab.id, e.nativeEvent.layout.x, e.nativeEvent.layout.width)}
                                 onPress={() => {
                                     handlePress(tab.id)
@@ -105,21 +103,16 @@ export const NavigationBar = () => {
                                     color={isActive && isArrived ? '#FFF' : '#666'}
                                 />
                                 {isActive && (
-                                    <Animated.View
-                                        layout={LinearTransition.springify().damping(30).stiffness(400)}
-                                        entering={FadeIn.duration(150)}
-                                        exiting={FadeOut.duration(150)}
-                                        style={{ overflow: 'hidden' }}
-                                    >
+                                    <View style={{ overflow: 'hidden' }}>
                                         <Text
                                             style={[styles.tabLabel, { color: isActive && isArrived ? '#FFF' : '#666', fontFamily: isEn ? 'InterMedium' : 'HindSiliguri' }]}
                                             numberOfLines={1}
                                         >
                                             {tab.label}
                                         </Text>
-                                    </Animated.View>
+                                    </View>
                                 )}
-                            </AnimatedPressable>
+                            </Pressable>
                         )
                     })}
                 </View>

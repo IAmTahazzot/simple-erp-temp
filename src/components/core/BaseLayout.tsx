@@ -1,6 +1,5 @@
-import { ReactNode, useEffect } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from "react-native-reanimated";
+import { ReactNode, useEffect, useRef } from "react";
+import { Animated, ScrollView, StyleSheet, View } from "react-native";
 
 interface BaseLayoutProps {
     children: ReactNode;
@@ -15,54 +14,57 @@ export const BaseLayout = ({ children, head }: BaseLayoutProps) => {
     const isStartup = !hasRunStartupAnimation;
 
     // Start the scroll container 150 pixels higher ONLY if it's startup, otherwise 0
-    const translateY = useSharedValue(isStartup ? -150 : 0);
+    const translateY = useRef(new Animated.Value(isStartup ? -150 : 0)).current;
     // Header starts completely transparent every time
-    const headerOpacity = useSharedValue(0);
+    const headerOpacity = useRef(new Animated.Value(0)).current;
     // Slight downward offset for the header to slide up from every time
-    const headerTranslateY = useSharedValue(15);
+    const headerTranslateY = useRef(new Animated.Value(15)).current;
 
     useEffect(() => {
         let delay = 0;
 
         if (isStartup) {
             // 1. Spring the scroll container down to its natural position (0)
-            translateY.value = withSpring(0, {
+            Animated.spring(translateY, {
+                toValue: 0,
                 damping: 18,
                 stiffness: 100,
                 mass: 0.8,
-            });
+                useNativeDriver: true,
+            }).start();
+            
             hasRunStartupAnimation = true;
             delay = 200; // Only delay the header reveal on startup to wait for the scrollContainer
         }
 
         // 2. Header reveal happens every time BaseLayout mounts
-        headerOpacity.value = withDelay(delay, withTiming(1, { duration: 500 }));
-        headerTranslateY.value = withDelay(delay, withTiming(0, { duration: 500 }));
-    }, [isStartup]);
-
-    const animatedScrollStyle = useAnimatedStyle(() => {
-        return {
-            transform: [{ translateY: translateY.value }]
-        };
-    });
-
-    const animatedHeaderStyle = useAnimatedStyle(() => {
-        return {
-            opacity: headerOpacity.value,
-            transform: [{ translateY: headerTranslateY.value }]
-        };
-    });
+        Animated.sequence([
+            Animated.delay(delay),
+            Animated.parallel([
+                Animated.timing(headerOpacity, {
+                    toValue: 1,
+                    duration: 500,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(headerTranslateY, {
+                    toValue: 0,
+                    duration: 500,
+                    useNativeDriver: true,
+                })
+            ])
+        ]).start();
+    }, [isStartup, translateY, headerOpacity, headerTranslateY]);
 
     return (
         <View style={styles.container}>
-            <Animated.View style={[styles.headWrapper, animatedHeaderStyle]}>
+            <Animated.View style={[styles.headWrapper, { opacity: headerOpacity, transform: [{ translateY: headerTranslateY }] }]}>
                 {head}
             </Animated.View>
 
             {/* Background filler to cover the gap at the bottom when scrollContainer translates up */}
             <View style={{ position: 'absolute', top: '50%', bottom: -500, left: 0, right: 0, backgroundColor: 'white' }} />
 
-            <Animated.View style={[styles.scrollContainer, animatedScrollStyle]}>
+            <Animated.View style={[styles.scrollContainer, { transform: [{ translateY }] }]}>
                 <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                     {children}
                 </ScrollView>
