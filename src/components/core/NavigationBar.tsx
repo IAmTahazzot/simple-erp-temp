@@ -68,7 +68,7 @@ export const NavigationBar = () => {
         if (id === activeTab) return
 
         setActiveTab(id)
-        // Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid)
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid)
     }
 
     const animatedPillStyle = useAnimatedStyle(() => ({
@@ -148,7 +148,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 2
+        gap: 2,
+        zIndex: 100,
     },
     navContainerWrapper: {
         flex: 1,
@@ -183,7 +184,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 12,
-        borderRadius: 25,
         height: 50,
         overflow: 'hidden',
     },
