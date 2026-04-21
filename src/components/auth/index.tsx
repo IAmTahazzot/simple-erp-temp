@@ -1,7 +1,10 @@
 import { Colors } from '@/constants/colors';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  Animated,
+  Easing,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   Pressable,
   ScrollView,
@@ -14,6 +17,59 @@ import Register from './Register';
 
 export default function AuthScreen() {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const keyboardProgress = useRef(new Animated.Value(0)).current;
+  const softEase = Easing.bezier(0.22, 0, 0.18, 1);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, (event) => {
+      const duration = Math.max(event.duration ?? 320, 280);
+      Animated.timing(keyboardProgress, {
+        toValue: 1,
+        duration,
+        easing: softEase,
+        useNativeDriver: true,
+      }).start();
+    });
+
+    const hideSub = Keyboard.addListener(hideEvent, (event) => {
+      const duration = Math.max(event.duration ?? 280, 240);
+      Animated.timing(keyboardProgress, {
+        toValue: 0,
+        duration,
+        easing: softEase,
+        useNativeDriver: true,
+      }).start();
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [keyboardProgress]);
+
+  const animatedCardStyle = {
+    transform: [
+      {
+        translateY: keyboardProgress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, -20],
+        }),
+      },
+      {
+        scale: keyboardProgress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [1, 0.996],
+        }),
+      },
+    ],
+    opacity: keyboardProgress.interpolate({
+      inputRange: [0, 1],
+      outputRange: [1, 0.999],
+    }),
+  };
 
   return (
     <KeyboardAvoidingView
@@ -27,7 +83,7 @@ export default function AuthScreen() {
         keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.card}>
+        <Animated.View style={[styles.card, animatedCardStyle]}>
           <View style={styles.tabsContainer}>
             <Pressable
               style={[styles.tab, activeTab === 'login' && styles.activeTab]}
@@ -50,7 +106,7 @@ export default function AuthScreen() {
           <View style={styles.content}>
             {activeTab === 'login' ? <Login /> : <Register />}
           </View>
-        </View>
+        </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
