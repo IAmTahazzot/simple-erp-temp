@@ -8,6 +8,7 @@ import User from './models/User'
 import schema from './schema'
 
 const adapter = new SQLiteAdapter({
+  dbName: 'erp',
   schema,
   migrations,
   onSetUpError: (error) => {

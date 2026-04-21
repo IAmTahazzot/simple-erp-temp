@@ -1,16 +1,15 @@
-
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text } from "react-native";
 
 export default function RootLayout() {
-    return (
-        <>
-            <Text style={{ fontSize: 500 }}>Hi</Text>
-        </>
-    );
+  return (
+    <>
+      <Text style={{ fontSize: 500 }}>Hi</Text>
+    </>
+  );
 }
 
 const styles = StyleSheet.create({
-    root: {
-        flex: 1,
-    }
+  root: {
+    flex: 1,
+  },
 });

@@ -1,9 +1,9 @@
-import { database } from '@/database';
+import {database} from '@/database';
 import User from '@/database/models/User';
-import { useAuthStore } from '@/store/authStore';
-import { Q } from '@nozbe/watermelondb';
-import React, { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {useAuthStore} from '@/store/authStore';
+import {Q} from '@nozbe/watermelondb';
+import React, {useState} from 'react';
+import {Alert, Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -25,11 +25,13 @@ export default function Login() {
       const user = users[0];
 
       if (user && user.password_hash === password) {
-        await login({ id: user.id, name: user.name, email: user.email }, 'local-auth-token');
+        await login({id: user.id, name: user.name, email: user.email}, 'local-auth-token');
+        Alert.alert('Success', 'Logged in successfully!');
       } else {
         Alert.alert('Login Failed', 'Invalid email or password');
       }
     } catch (e: any) {
+      console.log(e)
       Alert.alert('Error', 'An error occurred during login');
     }
   };

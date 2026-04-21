@@ -6,9 +6,9 @@ import { NotificationIcon } from "../icons"
 export const MainHeader = () => {
     const user = useAuthStore((state) => state.user)
 
-    if (!user) {
-        return <Text style={{color: 'white'}}>Unauthorized</Text>
-    }
+    // if (!user) {
+    //     return <Text style={{color: 'white'}}>Unauthorized</Text>
+    // }
 
     return (
         <View style={styles.headerContainer}>
@@ -16,7 +16,7 @@ export const MainHeader = () => {
                 <View style={styles.profileGreetingWrapper}>
                     <Image source={require('@/assets/placeholders/profile.png')} style={{ width: 30, height: 30, borderRadius: 20 }} />
 
-                    <Text style={styles.greetingTitle}>WELCOME, {user.name}</Text>
+                    <Text style={styles.greetingTitle}>WELCOME, {user?.name || 'Anonymous'}</Text>
                 </View>
             </View>
             <View style={styles.actionContainer}>
