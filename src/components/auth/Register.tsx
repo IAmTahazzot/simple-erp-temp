@@ -93,7 +93,16 @@ export default function Register() {
         />
       </View>
 
-      <Pressable style={styles.button} onPress={handleRegister}>
+      <Pressable style={({pressed}) => {
+        return [
+          [styles.button],
+          pressed && {
+            outlineOffset: 3,
+            outlineWidth: 1,
+            outlineColor: '#FFF',
+          }
+        ]
+      }} onPress={handleRegister}>
         <Text style={styles.buttonText}>Sign Up</Text>
       </Pressable>
     </View>
@@ -109,12 +118,14 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: "#FFF",
     marginBottom: 6,
+    textAlign: 'center',
   },
   subtitle: {
     fontFamily: "InterRegular",
     fontSize: 14,
     color: "#A0A0A0",
     marginBottom: 24,
+    textAlign: 'center',
   },
   formGroup: {
     marginBottom: 16,
@@ -126,22 +137,22 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    backgroundColor: "transparent",
+    backgroundColor: "#151515",
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: "#151515",
     borderRadius: 6,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 10,
     color: "#FFF",
     fontFamily: "InterRegular",
-    fontSize: 15,
+    fontSize: 14,
   },
   button: {
     backgroundColor: "#FFF",
     borderRadius: 6,
-    paddingVertical: 14,
+    paddingVertical: 18,
     alignItems: "center",
-    marginTop: 16,
+    marginTop: 12,
   },
   buttonText: {
     fontFamily: "InterMedium",

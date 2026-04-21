@@ -84,28 +84,30 @@ export default function AuthScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Animated.View style={[styles.card, animatedCardStyle]}>
+          <View style={styles.content}>
+            {activeTab === 'login' ? <Login /> : <Register />}
+          </View>
+
           <View style={styles.tabsContainer}>
             <Pressable
               style={[styles.tab, activeTab === 'login' && styles.activeTab]}
               onPress={() => setActiveTab('login')}
             >
               <Text style={[styles.tabText, activeTab === 'login' && styles.activeTabText]}>
-                Sign In
+                Login
               </Text>
             </Pressable>
+            <Text style={{color: '#FFF'}}>•</Text>
             <Pressable
               style={[styles.tab, activeTab === 'register' && styles.activeTab]}
               onPress={() => setActiveTab('register')}
             >
               <Text style={[styles.tabText, activeTab === 'register' && styles.activeTabText]}>
-                Create Account
+                Registration
               </Text>
             </Pressable>
           </View>
 
-          <View style={styles.content}>
-            {activeTab === 'login' ? <Login /> : <Register />}
-          </View>
         </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -120,42 +122,42 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 24,
+    padding: 20,
   },
   card: {
-    backgroundColor: '#1E1E1E', // Dark subtle shade (assuming dark theme)
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#333',
-    padding: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    backgroundColor: Colors.dark.background, // Dark subtle shade (assuming dark theme)
+    padding: 12,
   },
   tabsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#121212',
+    alignItems: 'center',
+    gap: 10,
     borderRadius: 6,
     padding: 4,
     marginBottom: 24,
   },
   tab: {
-    flex: 1,
     paddingVertical: 10,
-    alignItems: 'center',
     borderRadius: 4,
   },
   activeTab: {
-    backgroundColor: '#2D2D2D',
+    // borderBottomWidth: 1,
+    // borderBottomColor: '#FFF',
   },
   tabText: {
     fontFamily: 'InterMedium',
-    color: '#888',
-    fontSize: 14,
+    color: '#727272',
+    fontSize: 12,
   },
   activeTabText: {
+    fontFamily: 'InterBold',
     color: '#FFF',
+    borderWidth: 1,
+    borderColor: '#FFF',
+    borderStyle: 'dashed',
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 50,
   },
   content: {
     marginTop: 8,

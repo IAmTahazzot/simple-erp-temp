@@ -4,6 +4,7 @@ import {useAuthStore} from '@/store/authStore';
 import {Q} from '@nozbe/watermelondb';
 import React, {useState} from 'react';
 import {Alert, Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
+import {DoubleArrowRightIcon} from '@/components/icons/DoubleArrowRightIcon';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -66,8 +67,20 @@ export default function Login() {
         />
       </View>
 
-      <Pressable style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
+      <Pressable style={({ pressed }) => {
+        return [
+          [styles.button],
+          pressed && {
+            outlineOffset: 3,
+            outlineWidth: 1,
+            outlineColor: '#FFF',
+          }
+        ]
+      }} onPress={handleLogin}>
+        <View style={styles.buttonInnerContainer}>
+          <Text style={styles.buttonText}>Login</Text>
+          <DoubleArrowRightIcon size={24} color={'#000'} />
+        </View>
       </Pressable>
     </View>
   );
@@ -101,22 +114,27 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    backgroundColor: 'transparent',
+    backgroundColor: "#151515",
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: "#151515",
     borderRadius: 6,
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    color: '#FFF',
-    fontFamily: 'InterRegular',
-    fontSize: 15,
+    paddingVertical: 10,
+    color: "#FFF",
+    fontFamily: "InterRegular",
+    fontSize: 14,
+  },
+  buttonInnerContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center'
   },
   button: {
     backgroundColor: '#FFF',
     borderRadius: 6,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 16,
+    paddingVertical: 18,
+    marginTop: 12,
+    display: 'flex'
   },
   buttonText: {
     fontFamily: 'InterMedium',
