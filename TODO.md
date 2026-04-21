@@ -1,0 +1,19 @@
+- [ ] Product
+    - [ ] Category
+    - [ ] Inventory
+    - [ ] Purchase Orders
+- [ ] Orders
+- [ ] Customers
+- [ ] Suppliers
+- [ ] Employees
+- [ ] Reports
+    - [ ] Sales Report
+    - [ ] Inventory Report
+    - [ ] Customer Report
+    - [ ] Supplier Report
+- [ ] Settings
+    - [ ] User Management
+    - [ ] System Configuration
+    - [ ] Notification Settings
+    - [ ] Payment Settings
+    - [ ] Shipping Settings
