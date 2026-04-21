@@ -1,7 +1,7 @@
-import { database } from "@/database";
+import {database} from "@/database";
 import User from "@/database/models/User";
-import { useAuthStore } from "@/store/authStore";
-import React, { useState } from "react";
+import {useAuthStore} from "@/store/authStore";
+import React, {useState} from "react";
 import {
   Alert,
   Pressable,
@@ -22,35 +22,28 @@ export default function Register() {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
-    
-    try {
 
-      // Perform write within a database action
-      await database.write(async () => {
-          await database.collections
-            .get<User>("users")
-            .create((user: any) => {
-              user.name = name;
-              user.email = email;
-              // IMPORTANT: Do not store raw passwords in production. @TODO: Implement proper password hashing before saving to the database.
-              // This must be hashed before saving!
-              user.password_hash = password;
-            }).then(async (data) => {
-              console.log("Created user:", data);
-              await login(
-                {
-                  id: data.id,
-                  name: data.name,
-                  email: data.email,
-                },
-                "local-auth-token", // In an offline-only mode temporarily, you generate this token
-              );
-              
-              Alert.alert('Success', 'Account created successfully!');
-            }).catch(e => {
-              console.error("Error creating user:", e);
-            })
+    try {
+      const newUser = await database.write(async () => {
+        return database.collections
+          .get<User>("users")
+          .create((user: any) => {
+            user.name = name;
+            user.email = email;
+            user.password_hash = password;
+          })
       });
+
+      await login(
+        {
+          id: newUser.id,
+          name: newUser.name,
+          email: newUser.email,
+        },
+        "local-auth-token", // In an offline-only mode temporarily, you generate this token
+      );
+
+      Alert.alert('Success', 'Account created successfully!');
     } catch (e: any) {
       Alert.alert("Registration Failed", e.message || "Could not create user");
     }

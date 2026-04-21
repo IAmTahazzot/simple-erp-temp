@@ -82,12 +82,14 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: '#FFF',
     marginBottom: 6,
+    textAlign: 'center'
   },
   subtitle: {
     fontFamily: 'InterRegular',
     fontSize: 14,
     color: '#A0A0A0',
     marginBottom: 24,
+    textAlign: 'center'
   },
   formGroup: {
     marginBottom: 16,

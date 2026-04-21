@@ -1,6 +1,14 @@
 import { Colors } from '@/constants/colors';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import Login from './Login';
 import Register from './Register';
 
@@ -8,41 +16,55 @@ export default function AuthScreen() {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <View style={styles.tabsContainer}>
-          <Pressable
-            style={[styles.tab, activeTab === 'login' && styles.activeTab]}
-            onPress={() => setActiveTab('login')}
-          >
-            <Text style={[styles.tabText, activeTab === 'login' && styles.activeTabText]}>
-              Sign In
-            </Text>
-          </Pressable>
-          <Pressable
-            style={[styles.tab, activeTab === 'register' && styles.activeTab]}
-            onPress={() => setActiveTab('register')}
-          >
-            <Text style={[styles.tabText, activeTab === 'register' && styles.activeTabText]}>
-              Create Account
-            </Text>
-          </Pressable>
-        </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 16 : 0}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.card}>
+          <View style={styles.tabsContainer}>
+            <Pressable
+              style={[styles.tab, activeTab === 'login' && styles.activeTab]}
+              onPress={() => setActiveTab('login')}
+            >
+              <Text style={[styles.tabText, activeTab === 'login' && styles.activeTabText]}>
+                Sign In
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[styles.tab, activeTab === 'register' && styles.activeTab]}
+              onPress={() => setActiveTab('register')}
+            >
+              <Text style={[styles.tabText, activeTab === 'register' && styles.activeTabText]}>
+                Create Account
+              </Text>
+            </Pressable>
+          </View>
 
-        <View style={styles.content}>
-          {activeTab === 'login' ? <Login /> : <Register />}
+          <View style={styles.content}>
+            {activeTab === 'login' ? <Login /> : <Register />}
+          </View>
         </View>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.dark.background,
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: Colors.dark.background,
   },
   card: {
     backgroundColor: '#1E1E1E', // Dark subtle shade (assuming dark theme)
