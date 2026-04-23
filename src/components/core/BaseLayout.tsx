@@ -65,7 +65,7 @@ export const BaseLayout = ({ children, head }: BaseLayoutProps) => {
             <View style={{ position: 'absolute', top: '50%', bottom: -500, left: 0, right: 0, backgroundColor: 'white' }} />
 
             <Animated.View style={[styles.scrollContainer, { transform: [{ translateY }] }]}>
-                <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                <ScrollView showsVerticalScrollIndicator={false}>
                     {children}
                 </ScrollView>
             </Animated.View>
@@ -89,9 +89,4 @@ const styles = StyleSheet.create({
         borderTopRightRadius: 20,
         zIndex: 10, // Ensure it stays above the header when translating up
     },
-    scrollContent: {
-        paddingBottom: 100,
-        paddingTop: 12,
-        paddingHorizontal: 12,
-    }
 })
