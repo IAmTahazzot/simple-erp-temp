@@ -1,11 +1,24 @@
 import * as SecureStore from 'expo-secure-store';
 import { create } from 'zustand';
+import { supportedLanguages } from '@/i18n/resources';
+
+type Language = (typeof supportedLanguages)[number];
+
+type Theme = 'light' | 'dark' | 'system';
+
+const isSupportedLanguage = (value: string): value is Language => {
+  return supportedLanguages.includes(value as Language);
+};
+
+const isTheme = (value: string): value is Theme => {
+  return value === 'light' || value === 'dark' || value === 'system';
+};
 
 interface PreferencesState {
-  language: string;
-  theme: 'light' | 'dark' | 'system';
-  setLanguage: (lang: string) => Promise<void>;
-  setTheme: (theme: 'light' | 'dark' | 'system') => Promise<void>;
+  language: Language;
+  theme: Theme;
+  setLanguage: (lang: Language) => Promise<void>;
+  setTheme: (theme: Theme) => Promise<void>;
   loadPreferences: () => Promise<void>;
 }
 
@@ -25,13 +38,17 @@ export const usePreferencesStore = create<PreferencesState>((set) => ({
 
   loadPreferences: async () => {
     try {
-      const language = await SecureStore.getItemAsync('app_language');
-      const theme = await SecureStore.getItemAsync('app_theme') as 'light' | 'dark' | 'system' | null;
+      const storedLanguage = await SecureStore.getItemAsync('app_language');
+      const storedTheme = await SecureStore.getItemAsync('app_theme');
 
-      if (language) set({ language });
-      if (theme) set({ theme });
-    } catch (e) {
-      // Ignore error, fallback to defaults
+      const language: Language =
+        storedLanguage && isSupportedLanguage(storedLanguage) ? storedLanguage : 'en';
+      const theme: Theme =
+        storedTheme && isTheme(storedTheme) ? storedTheme : 'system';
+
+      set({ language, theme });
+    } catch {
+      // Ignore errors and keep defaults.
     }
   },
 }));
