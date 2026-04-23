@@ -11,7 +11,9 @@ export const ProductHeader = () => {
 
     return (
         <View style={styles.productHeaderContainer}>
-            <Text style={styles.productHeaderText}>Products {user.email}</Text>
+            <Text style={styles.productHeaderText}>
+                Products
+            </Text>
             <View />
         </View>
     )

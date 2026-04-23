@@ -65,9 +65,9 @@ export const BaseLayout = ({ children, head }: BaseLayoutProps) => {
             <View style={{ position: 'absolute', top: '50%', bottom: -500, left: 0, right: 0, backgroundColor: 'white' }} />
 
             <Animated.View style={[styles.scrollContainer, { transform: [{ translateY }] }]}>
-                <ScrollView showsVerticalScrollIndicator={false}>
+                <View style={{ flex: 1 }}>
                     {children}
-                </ScrollView>
+                </View>
             </Animated.View>
         </View>
     )
