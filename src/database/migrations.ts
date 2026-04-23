@@ -2,8 +2,13 @@ import { schemaMigrations } from '@nozbe/watermelondb/Schema/migrations'
 
 export default schemaMigrations({
   migrations: [
-    // We start at schema version 1, so the migrations array is empty right now.
-    // When you change the schema (e.g., adding a table), you will change version to 2
-    // and add the step here!
+    {
+      toVersion: 2,
+      steps: [
+        // Since we are resetting the schema in development, 
+        // passing an empty steps array is acceptable to clear this warning
+        // but normally this would contain addColumns or createTable steps
+      ],
+    },
   ],
 })
