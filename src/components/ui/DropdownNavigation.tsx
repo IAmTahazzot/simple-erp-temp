@@ -45,9 +45,11 @@ export const DropdownNavigation = ({ links }: DropdownNavigationProps) => {
 
   // Find the active link label for the trigger
   const allLinks = links.flat();
-  const activeLink = allLinks.find(l => pathname === l.href || pathname.startsWith(l.href + '/'));
+  const activeLink = allLinks
+    .filter(l => pathname === l.href || pathname.startsWith(l.href + '/'))
+    .sort((a, b) => b.href.length - a.href.length)[0];
   const triggerLabel = activeLink?.label ?? 'Menu';
-
+  
   // ── Open ──
   const openMenu = useCallback(() => {
     triggerRef.current?.measureInWindow((x, y, width, height) => {
@@ -95,7 +97,7 @@ export const DropdownNavigation = ({ links }: DropdownNavigationProps) => {
 
   // Card top = just below the trigger
   const cardTop = triggerLayout ? triggerLayout.y + triggerLayout.height + 8 : 80;
-
+  
   return (
     <>
       {/* ── Trigger ── */}
