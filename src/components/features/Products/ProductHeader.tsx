@@ -10,6 +10,7 @@ import {Text, View, StyleSheet} from 'react-native';
 import {Button} from '@/components/ui/Button';
 import {useRouter} from 'expo-router';
 import {useState} from 'react';
+import {NewProductModal} from '@/components/features/Products/NewProduct';
 
 const ICON_SIZE = 22;
 const ICON_COLOR = '#111827';
@@ -28,20 +29,18 @@ const NAV_LINKS: NavLink[][] = [
     },
     {
       label: 'Purchase orders',
-      href: '/products/purchase-orders',
+      href: '/products/purchaseOrder',
       icon: <ClipboardList size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.6}/>
     },
   ]
 ];
 
 export function ProductHeader() {
-  const router = useRouter()
-
+  const [isProductModelVisible, setIsProductModelVisible] = useState(false);
   const [activeLink, setActiveLink] = useState<NavLink>(NAV_LINKS[0][0]);
 
   const handleOnLinkChange = (link: NavLink) => {
     setActiveLink(link);
-    console.log(activeLink.href)
   }
 
   return (
@@ -49,16 +48,19 @@ export function ProductHeader() {
       <DropdownNavigation links={NAV_LINKS} onChange={handleOnLinkChange}/>
       {/* ...rest of your header (back button, actions, etc.) */}
 
-      <Button title={'New Product'}
-              size={'icon'}
-              rightIcon={<CirclePlus size={18} color={'#fff'} strokeWidth={2}/>}
-              onPress={() => {
-                router.push({
-                  pathname: '/products/inventory',
-                })
-                console.log('Add product')
-              }}
-              variant={'ghost'}/>
+      {['/products', '/products/purchaseOrder'].includes(activeLink.href) &&
+        <Button size={'icon'}
+                rightIcon={<CirclePlus size={18} color={'#fff'} strokeWidth={2}/>}
+                onPress={() => {
+                  // let's open new modal for new product        creation
+                  setIsProductModelVisible(true);
+                }}
+                variant={'ghost'}/>}
+
+      <NewProductModal visible={isProductModelVisible}
+                       onClose={() => {
+                         setIsProductModelVisible(false);
+                       }}/>
     </View>
   );
 }

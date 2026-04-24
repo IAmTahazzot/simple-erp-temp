@@ -5,7 +5,8 @@ import {withObservables} from '@nozbe/watermelondb/react';
 import {Q} from '@nozbe/watermelondb';
 import {faker} from '@faker-js/faker/locale/en';
 import {useRouter} from 'expo-router'
-import React, {memo, useCallback} from 'react'
+import React, {memo, useCallback, useState} from 'react'
+import { NewProductModal } from '@/components/features/Products/NewProduct';
 
 // eslint-disable-next-line react/display-name
 const ProductItem = memo(({item, onPress}: { item: Product, onPress: () => void }) => {
@@ -29,24 +30,6 @@ const ProductItem = memo(({item, onPress}: { item: Product, onPress: () => void 
 
 function Products({products}: { products: Product[] }) {
   const router = useRouter()
-
-  const createDemoProduct = async () => {
-    try {
-      const product = await database.write(async () => {
-        return await database.collections.get<Product>('products').create(product => {
-          product.name = faker.commerce.productName();
-          product.sku = 'DEMO-' + faker.random.alphaNumeric(8).toUpperCase()
-          product.description = faker.commerce.productDescription();
-          product.price = parseFloat(faker.commerce.price());
-        })
-      })
-
-      console.log('Product has been created: ', product)
-    } catch (err) {
-      console.log("Error creating product:", err)
-    }
-  }
-
   const renderItem = useCallback(({item}: { item: Product }) => (
     <ProductItem 
       item={item} 
@@ -59,11 +42,6 @@ function Products({products}: { products: Product[] }) {
 
   return (
     <View style={{flex: 1}}>
-      <Pressable style={{backgroundColor: 'black', margin: 10, borderRadius: 12, padding: 20,}}
-                 onPress={createDemoProduct}>
-        <Text style={{color: 'white'}}>Generate a demo product</Text>
-      </Pressable>
-
       <FlatList
         data={products}
         keyExtractor={(item) => item.id}
@@ -73,6 +51,7 @@ function Products({products}: { products: Product[] }) {
         initialNumToRender={15}  // How many items to render explicitly on the first pass
         removeClippedSubviews={true} // Unmounts off-screen items completely, essential for huge lists
       />
+
     </View>
   )
 }

@@ -6,7 +6,7 @@ export const Colors = {
         primary: '#171717',
         text: '#171717',
         label: '#4b4b4b',
-        placeholder: '#797979'
+        placeholder: '#c0c0c0'
     },
     dark: {
         background: '#000000ff'

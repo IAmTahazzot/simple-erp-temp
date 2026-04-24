@@ -87,6 +87,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
+        overflow: 'hidden',
         zIndex: 10, // Ensure it stays above the header when translating up
     },
 })

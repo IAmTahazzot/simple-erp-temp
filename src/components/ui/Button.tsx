@@ -73,6 +73,7 @@ export const Button = ({
       activeOpacity={0.8}
       onPress={onPress}
       disabled={disabled || loading}
+      hitSlop={15}
       style={[
         styles.base,
         getVariantStyle(),

@@ -1,21 +1,19 @@
 import {useRef, useState} from 'react';
-import {StyleSheet, TextInput, Text, Pressable} from 'react-native';
+import {StyleSheet, TextInput, Text, Pressable, KeyboardAvoidingView, TextInputProps} from 'react-native';
 import {Colors, type ThemeType, Themes} from '@/constants/colors';
 
-type InputProps = {
-  placeholder?: string;
-  value?: string;
-  onChangeText?: (text: string) => void;
-  theme?: ThemeType
+type InputProps = TextInputProps & {
+  theme?: ThemeType;
+  autoGrow?: boolean;
 }
 
-export const Input = ({placeholder, theme = 'DARK', value, size, onChangeText}: InputProps & {
+export const Input = ({placeholder, theme = 'DARK', value, size, autoGrow, onChangeText, style, ...rest}: InputProps & {
   size?: 'small' | 'medium' | 'large'
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   let inputSizeStyle = {};
   let inputFocusedSizeStyle = {};
-  
+
   switch (size) {
     case 'large':
       inputSizeStyle = {fontSize: 18, paddingVertical: 12, paddingHorizontal: 16};
@@ -35,27 +33,33 @@ export const Input = ({placeholder, theme = 'DARK', value, size, onChangeText}: 
   }
 
   return (
-    <TextInput textContentType={'none'}
-               placeholder={placeholder || 'Enter your text here'}
-               keyboardType={'default'}
-               value={value}
-               placeholderTextColor={Colors.light.placeholder}
-               style={
-                 [
-                   styles.input,
-                   inputSizeStyle,
-                   isFocused && [styles.inputFocused, inputFocusedSizeStyle, theme && {borderColor: Themes[theme]}],
-                 ]}
-               onChangeText={onChangeText}
-               onFocus={() => setIsFocused(true)}
-               onBlur={() => setIsFocused(false)}/>
+    <KeyboardAvoidingView>
+      <TextInput textContentType={'none'}
+                 placeholder={placeholder || 'Enter your text here'}
+                 keyboardType={'default'}
+                 value={value}
+                 multiline={autoGrow}
+                 placeholderTextColor={Colors.light.placeholder}
+                 {...rest}
+                 style={
+                   [
+                     styles.input,
+                     inputSizeStyle,
+                     isFocused && [styles.inputFocused, inputFocusedSizeStyle, theme && {borderColor: Themes[theme]}],
+                     style
+                   ]}
+                 onChangeText={onChangeText}
+                 onFocus={() => setIsFocused(true)}
+                 onBlur={() => setIsFocused(false)}/>
+    </KeyboardAvoidingView>
   )
 }
 
-export const MegaInput = ({label, theme = 'DARK', ...inputProps}: {
+export const MegaInput = ({label, theme = 'DARK', autoGrow, style, ...inputProps}: {
   label: string,
-  theme?: ThemeType
-} & Omit<InputProps, 'theme'>) => {
+  theme?: ThemeType,
+  autoGrow?: boolean
+} & Omit<InputProps, 'theme' | 'autoGrow'>) => {
   const [isFocused, setIsFocused] = useState(false);
   const themeColor = Themes[theme] || Themes.DARK;
   const inputRef = useRef<TextInput>(null)
@@ -71,11 +75,12 @@ export const MegaInput = ({label, theme = 'DARK', ...inputProps}: {
       <Text style={[styles.megaInputLabel, isFocused && {color: themeColor}]}>{label}</Text>
       <TextInput
         ref={inputRef}
-        style={styles.megaInputText}
         placeholderTextColor={'#797979'}
+        multiline={autoGrow}
+        {...inputProps}
+        style={[styles.megaInputText, autoGrow && { minHeight: 24 }, style]}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        {...inputProps}
       />
     </Pressable>
   )

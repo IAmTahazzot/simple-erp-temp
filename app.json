@@ -45,7 +45,21 @@
         "expo-font"
       ],
       "expo-localization",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow access to your photos to select an image for your profile.",
+          "colors": {
+            "cropToolbarColor": "#000000"
+          },
+          "dark": {
+            "colors": {
+                "cropToolbarColor": "#ffffff"
+            }
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

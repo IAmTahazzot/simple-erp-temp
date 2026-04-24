@@ -15,7 +15,6 @@ import { useRouter, usePathname } from 'expo-router';
 import { ChevronDown } from 'lucide-react-native';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
 export type NavLink = {
   label: string;
   href: string;
