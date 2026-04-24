@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useEffect, useState, useCallback} from 'react';
 import {Alert, Button, Pressable, StyleSheet, Text, View} from 'react-native';
 
 import {BaseLayout} from '@/components/core/BaseLayout';
@@ -7,6 +7,8 @@ import {setAppLanguage} from '@/i18n';
 import {type AppLanguage} from '@/i18n/resources';
 import {useCommonTranslation} from '@/i18n/useTypedTranslation';
 import {useAuthStore} from '@/store/authStore';
+import {Input, MegaInput} from '@/components/ui/Input';
+import React from 'react';
 
 export default function HomeScreen() {
   const {t, i18n} = useCommonTranslation()
@@ -17,7 +19,6 @@ export default function HomeScreen() {
   const switchLanguage = async (language: AppLanguage) => {
     await setAppLanguage(language);
   };
-
 
   return (
     <BaseLayout head={<MainHeader/>}>
@@ -52,6 +53,12 @@ export default function HomeScreen() {
               {activeLanguage === 'en' ? t('language.bangla') : t('language.english')}
             </Text>
           </Pressable>
+        </View>
+
+        <View style={{margin: 10, display: 'flex', gap: 5}}>
+          <Input size={'small'} theme={'WATER'} />
+          <Input />
+          <MegaInput label={'Price'} placeholder={'$00.00'} theme={'DANGER'}/>
         </View>
       </View>
     </BaseLayout>

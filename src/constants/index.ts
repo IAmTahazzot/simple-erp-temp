@@ -1,1 +1,2 @@
 export const DEFAULT_HEADER_HEIGHT = 57
+export const NAVIGATION_Z_INDEX = 100
