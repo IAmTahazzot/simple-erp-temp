@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb'
 
 export default appSchema({
-  version: 2,
+  version: 4,
   tables: [
     tableSchema({
       name: 'users',
@@ -57,10 +57,23 @@ export default appSchema({
       ]
     }),
     tableSchema({
+     name: 'product_images',
+      columns: [
+        { name: 'product_id', type: 'string', isIndexed: true },
+        { name: 'image_url', type: 'string' },
+        { name: 'is_primary', type: 'boolean' },
+        { name: 'created_at', type: 'number' },
+        { name: 'updated_at', type: 'number' },
+        { name: 'last_modified', type: 'number', isOptional: true },
+        { name: 'server_deleted_at', type: 'number', isOptional: true },
+      ]
+    }),
+    tableSchema({
       name: 'inventory',
       columns: [
         { name: 'product_id', type: 'string', isIndexed: true },
         { name: 'quantity', type: 'number' },
+        { name: 'location', type: 'string', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
         { name: 'last_modified', type: 'number', isOptional: true },

@@ -12,6 +12,7 @@ import OrderItem from './models/OrderItem'
 import PurchaseOrder from './models/PurchaseOrder'
 import PurchaseOrderItem from './models/PurchaseOrderItem'
 import Payment from './models/Payment'
+import ProductImages from './models/Images'
 import schema from './schema'
 
 const adapter = new SQLiteAdapter({
@@ -28,6 +29,7 @@ export const database = new Database({
   modelClasses: [
     User,
     Product,
+    ProductImages,
     Inventory,
     Customer,
     Supplier,
