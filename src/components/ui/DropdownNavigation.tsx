@@ -16,7 +16,7 @@ import { ChevronDown } from 'lucide-react-native';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type NavLink = {
+export type NavLink = {
   label: string;
   href: string;
   icon: React.ReactNode;
@@ -25,11 +25,12 @@ type NavLink = {
 type DropdownNavigationProps = {
   /** Each inner array is a group; groups are separated by a hairline. */
   links: NavLink[][];
+  onChange?: (link: NavLink) => void; // Optional callback when a link is selected
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export const DropdownNavigation = ({ links }: DropdownNavigationProps) => {
+export const DropdownNavigation = ({ links, onChange }: DropdownNavigationProps) => {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -84,10 +85,12 @@ export const DropdownNavigation = ({ links }: DropdownNavigationProps) => {
   const handlePress = useCallback(
     (href: string) => {
       closeMenu();
+      const link = allLinks.find(l => l.href === href);  // 👈 find the full link object
+      if (link) onChange?.(link);                         // 👈 fire with full NavLink
       // Give close animation a head-start before navigating
       setTimeout(() => router.push(href as any), 80);
     },
-    [closeMenu, router],
+    [closeMenu, router, allLinks, onChange],
   );
 
   const chevronDeg = chevronRotate.interpolate({
