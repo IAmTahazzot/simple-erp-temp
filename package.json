@@ -38,6 +38,7 @@
     "expo-system-ui": "~6.0.9",
     "expo-web-browser": "~15.0.10",
     "i18next": "^26.0.5",
+    "lucide-react-native": "^1.5.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-i18next": "^17.0.4",
@@ -52,11 +53,11 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.29.0",
+    "@faker-js/faker": "~7.6.0",
     "@types/react": "~19.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
-    "typescript": "~5.9.2",
-    "@faker-js/faker": "~7.6.0"
+    "typescript": "~5.9.2"
   },
   "private": true
 }

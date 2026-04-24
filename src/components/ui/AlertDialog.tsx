@@ -22,7 +22,7 @@ export interface AlertProps {
   onDismiss?: () => void;
 }
 
-export const Alert = ({
+export const AlertDialog = ({
                         visible,
                         title,
                         description,
