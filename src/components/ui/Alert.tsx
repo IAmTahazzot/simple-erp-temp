@@ -1,13 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, {useEffect, useRef} from 'react';
 import {
   View,
   Text,
   Modal,
   StyleSheet,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   Animated,
-  Dimensions,
 } from 'react-native';
 
 export interface AlertButton {
@@ -25,47 +23,25 @@ export interface AlertProps {
 }
 
 export const Alert = ({
-  visible,
-  title,
-  description,
-  buttons = [{ text: 'OK' }],
-  onDismiss,
-}: AlertProps) => {
+                        visible,
+                        title,
+                        description,
+                        buttons = [{text: 'OK'}],
+                        onDismiss,
+                      }: AlertProps) => {
   const scaleAnim = useRef(new Animated.Value(1.2)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
-      Animated.parallel([
-        Animated.timing(opacityAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          bounciness: 10,
-          speed: 20,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.timing(opacityAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 0.9,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      scaleAnim.setValue(1.2);
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        bounciness: 12,
+        speed: 20,
+        useNativeDriver: true,
+      }).start();
     }
-  }, [visible, opacityAnim, scaleAnim]);
-
-  if (!visible) return null;
+  }, [visible, scaleAnim]);
 
   const renderButtons = () => {
     const isHorizontal = buttons.length === 2;
@@ -114,32 +90,27 @@ export const Alert = ({
     <Modal
       transparent
       visible={visible}
-      animationType="none"
+      animationType="fade"
       onRequestClose={onDismiss}
     >
-      <TouchableWithoutFeedback onPress={onDismiss}>
-        <View style={styles.overlay}>
-          <TouchableWithoutFeedback>
-            <Animated.View
-              style={[
-                styles.alertBox,
-                {
-                  opacity: opacityAnim,
-                  transform: [{ scale: scaleAnim }],
-                },
-              ]}
-            >
-              <View style={styles.contentContainer}>
-                <Text style={styles.title}>{title}</Text>
-                {description ? (
-                  <Text style={styles.description}>{description}</Text>
-                ) : null}
-              </View>
-              {renderButtons()}
-            </Animated.View>
-          </TouchableWithoutFeedback>
-        </View>
-      </TouchableWithoutFeedback>
+      <View style={styles.overlay}>
+        <Animated.View
+          style={[
+            styles.alertBox,
+            {
+              transform: [{scale: scaleAnim}],
+            },
+          ]}
+        >
+          <View style={styles.contentContainer}>
+            <Text style={styles.title}>{title || 'Unknown alert'}</Text>
+            {description ? (
+              <Text style={styles.description}>{description}</Text>
+            ) : null}
+          </View>
+          {renderButtons()}
+        </Animated.View>
+      </View>
     </Modal>
   );
 };
