@@ -55,7 +55,7 @@ export interface SelectProps {
   /** Groups of items. Use a single group with no label for a flat list. */
   groups: SelectGroup[];
   /** Currently selected value */
-  value?: string;
+  value?: string | null;
   /** Callback fired when the user picks a value */
   onValueChange?: (value: string) => void;
   /** Placeholder shown when nothing is selected */

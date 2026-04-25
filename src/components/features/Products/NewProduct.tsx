@@ -10,6 +10,8 @@ import {readAsStringAsync, EncodingType} from 'expo-file-system/legacy';
 import {decode} from 'base64-arraybuffer';
 import {ImagePlus} from 'lucide-react-native';
 import {supabase} from '@/services/supabase';
+import {database} from '@/database';
+import Product from '@/database/models/Product';
 
 interface NewProductModalProps {
   visible: boolean;
@@ -44,9 +46,18 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
   }
 
   const handleSave = async () => {
-    await new Promise(resolve => setTimeout(resolve, 5000)) // Simulate async operation like database save
 
-
+    await database.write(async() => {
+      return await database.get<Product>('products').create(p => {
+        p.name = product?.name || '';
+        p.price = product?.price || 0;
+        p.cost = product?.cost || 0;
+        p.description = product?.description || '';
+      })
+    })
+    
+    console.info('product saved')
+    
     // try {
     //   if (!image) return;
     //   const base64 = await readAsStringAsync(image, { encoding: EncodingType.Base64 });

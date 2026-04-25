@@ -4,7 +4,7 @@ run:
 build:
 	@cd android && ./gradlew assembleRelease
 
-injectSqlite:
+inject:
 	@MSYS_NO_PATHCONV=1 adb push sqlite3 /data/local/tmp/
 	@MSYS_NO_PATHCONV=1 adb shell "chmod 755 /data/local/tmp/sqlite3"
 	adb shell "run-as com.anonymous.app cp /data/local/tmp/sqlite3 /data/data/com.anonymous.app/sqlite3"

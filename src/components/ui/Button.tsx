@@ -11,7 +11,7 @@ import {
 
 interface ButtonProps {
   title?: string;
-  onPress: () => void;
+  onPress?: () => void;
   variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   loading?: boolean;
