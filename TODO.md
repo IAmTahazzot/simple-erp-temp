@@ -15,5 +15,5 @@
     - [ ] User Management
     - [ ] System Configuration
     - [ ] Notification Settings
-    - [ ] Payment Settings
+    - [ ] Transaction Settings
     - [ ] Shipping Settings

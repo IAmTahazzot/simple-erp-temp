@@ -13,6 +13,9 @@ injectSqlite:
 db:
 	@MSYS_NO_PATHCONV=1 adb shell -t run-as com.anonymous.app /data/data/com.anonymous.app/sqlite3 erp.db
 	
+delete_database:
+	@MSYS_NO_PATHCONV=1 adb shell -t run-as com.anonymous.app rm erp.db
+	
 i:
 	@npx expo install $(filter-out $@,$(MAKECMDGOALS))
 

@@ -1,8 +1,8 @@
 import { Model } from '@nozbe/watermelondb'
 import { field, date, readonly, relation } from '@nozbe/watermelondb/decorators'
 
-export default class Payment extends Model {
-  static table = 'payments'
+export default class Transaction extends Model {
+  static table = 'transactions'
   static associations = {
     orders: { type: 'belongs_to', key: 'order_id' },
     purchase_orders: { type: 'belongs_to', key: 'purchase_order_id' }
@@ -10,8 +10,10 @@ export default class Payment extends Model {
 
   @field('order_id') orderId?: string
   @field('purchase_order_id') purchaseOrderId?: string
-  @date('payment_date') paymentDate!: Date
+  
+  @field('type') type!: 'payment' | 'refund'
   @field('amount') amount!: number
+  @date('payment_date') paymentDate!: Date
 
   @relation('orders', 'order_id') order: any
   @relation('purchase_orders', 'purchase_order_id') purchaseOrder: any

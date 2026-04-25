@@ -19,7 +19,7 @@ export default class PurchaseOrder extends Model {
   @relation('suppliers', 'supplier_id') supplier: any
   @relation('users', 'user_id') user: any
   @children('purchase_order_items') items: any
-  @children('payments') payments: any
+  @children('transactions') transactions: any
 
   @readonly @date('created_at') createdAt!: Date
   @readonly @date('updated_at') updatedAt!: Date

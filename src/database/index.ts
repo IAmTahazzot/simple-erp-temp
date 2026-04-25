@@ -11,7 +11,7 @@ import Order from './models/Order'
 import OrderItem from './models/OrderItem'
 import PurchaseOrder from './models/PurchaseOrder'
 import PurchaseOrderItem from './models/PurchaseOrderItem'
-import Payment from './models/Payment'
+import Transaction from './models/Transaction'
 import ProductImages from './models/Images'
 import schema from './schema'
 
@@ -37,6 +37,6 @@ export const database = new Database({
     OrderItem,
     PurchaseOrder,
     PurchaseOrderItem,
-    Payment,
+    Transaction,
   ],
 })

@@ -19,7 +19,7 @@ export default class Order extends Model {
   @relation('customers', 'customer_id') customer: any
   @relation('users', 'user_id') user: any
   @children('order_items') orderItems: any
-  @children('payments') payments: any
+  @children('transactions') transactions: any
 
   @readonly @date('created_at') createdAt!: Date
   @readonly @date('updated_at') updatedAt!: Date

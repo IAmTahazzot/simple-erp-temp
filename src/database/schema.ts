@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb'
 
 export default appSchema({
-  version: 4,
+  version: 7, // bump version (important)
   tables: [
     tableSchema({
       name: 'users',
@@ -16,6 +16,7 @@ export default appSchema({
         { name: 'server_deleted_at', type: 'number', isOptional: true },
       ]
     }),
+
     tableSchema({
       name: 'customers',
       columns: [
@@ -29,6 +30,7 @@ export default appSchema({
         { name: 'server_deleted_at', type: 'number', isOptional: true },
       ]
     }),
+
     tableSchema({
       name: 'suppliers',
       columns: [
@@ -43,6 +45,7 @@ export default appSchema({
         { name: 'server_deleted_at', type: 'number', isOptional: true },
       ]
     }),
+
     tableSchema({
       name: 'products',
       columns: [
@@ -56,8 +59,9 @@ export default appSchema({
         { name: 'server_deleted_at', type: 'number', isOptional: true },
       ]
     }),
+
     tableSchema({
-     name: 'product_images',
+      name: 'product_images',
       columns: [
         { name: 'product_id', type: 'string', isIndexed: true },
         { name: 'image_url', type: 'string' },
@@ -68,6 +72,7 @@ export default appSchema({
         { name: 'server_deleted_at', type: 'number', isOptional: true },
       ]
     }),
+
     tableSchema({
       name: 'inventory',
       columns: [
@@ -80,6 +85,7 @@ export default appSchema({
         { name: 'server_deleted_at', type: 'number', isOptional: true },
       ]
     }),
+
     tableSchema({
       name: 'orders',
       columns: [
@@ -96,6 +102,7 @@ export default appSchema({
         { name: 'server_deleted_at', type: 'number', isOptional: true },
       ]
     }),
+
     tableSchema({
       name: 'order_items',
       columns: [
@@ -109,6 +116,7 @@ export default appSchema({
         { name: 'server_deleted_at', type: 'number', isOptional: true },
       ]
     }),
+
     tableSchema({
       name: 'purchase_orders',
       columns: [
@@ -125,6 +133,7 @@ export default appSchema({
         { name: 'server_deleted_at', type: 'number', isOptional: true },
       ]
     }),
+
     tableSchema({
       name: 'purchase_order_items',
       columns: [
@@ -138,13 +147,16 @@ export default appSchema({
         { name: 'server_deleted_at', type: 'number', isOptional: true },
       ]
     }),
+
+    // ✅ UPDATED TABLE
     tableSchema({
-      name: 'payments',
+      name: 'transactions',
       columns: [
         { name: 'order_id', type: 'string', isIndexed: true, isOptional: true },
         { name: 'purchase_order_id', type: 'string', isIndexed: true, isOptional: true },
-        { name: 'payment_date', type: 'number' },
+        { name: 'type', type: 'string' }, // 'payment' | 'refund'
         { name: 'amount', type: 'number' },
+        { name: 'payment_date', type: 'number' },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
         { name: 'last_modified', type: 'number', isOptional: true },
