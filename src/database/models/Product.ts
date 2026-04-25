@@ -13,6 +13,7 @@ export default class Product extends Model {
   @field('sku') sku!: string
   @field('description') description?: string
   @field('price') price!: number
+  @field('cost') cost!: number
 
   @children('inventory_items') inventoryItems!: any
   @children('order_items') orderItems!: any
