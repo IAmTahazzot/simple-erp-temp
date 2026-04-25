@@ -49,17 +49,17 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow access to your photos to select an image for your profile.",
+          "photosPermission": "The app accesses your photos to let you share them with your friends.",
           "colors": {
             "cropToolbarColor": "#000000"
           },
           "dark": {
             "colors": {
-                "cropToolbarColor": "#ffffff"
+              "cropToolbarColor": "#000000"
             }
           }
         }
-      ]
+      ] 
     ],
     "experiments": {
       "typedRoutes": true,

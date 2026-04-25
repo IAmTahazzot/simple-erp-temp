@@ -1,11 +1,15 @@
 import React, {useState} from 'react';
-import {View, Text, TextInput, StyleSheet, Pressable, Alert} from 'react-native';
+import {View, Text, TextInput, StyleSheet, Pressable, Alert, Image} from 'react-native';
 import {BaseModal} from '@/components/core/BaseModal';
 import {Button} from '@/components/ui/Button';
 import {Input, MegaInput} from '@/components/ui/Input'
 import {Colors, Themes} from '@/constants/colors';
 import {useCommonTranslation} from '@/i18n/useTypedTranslation';
 import * as ImagePicker from 'expo-image-picker'
+import {readAsStringAsync, EncodingType} from 'expo-file-system/legacy';
+import {decode} from 'base64-arraybuffer';
+import {ImagePlus} from 'lucide-react-native';
+import {supabase} from '@/services/supabase';
 
 interface NewProductModalProps {
   visible: boolean;
@@ -13,21 +17,60 @@ interface NewProductModalProps {
 }
 
 export function NewProductModal({visible, onClose}: NewProductModalProps) {
-  const [productName, setProductName] = useState('');
-  const [image, setImage] = useState<string | null>(null);
   const {t} = useCommonTranslation()
+
+  const [image, setImage] = useState<string | null>(null);
+  const [inventory, setInventory] = useState<number>(0);
   const [product, setProduct] = useState<{
     name: string;
     price: number;
     cost: number;
     description: string;
+    imageUri?: string | null;
   }>()
 
   const profit = product ? Number((product.price - product.cost).toFixed(2)) : 0.00;
+  const isValidCalculation = product && !isNaN(profit) && product.price > 0 && product.cost >= 0;
 
-  const handleSave = () => {
-    // Add database save logic here
-    console.log('Saved product:', product);
+  const reset = () => {
+    setProduct({
+      name: '',
+      price: 0,
+      cost: 0,
+      description: '',
+      imageUri: null,
+    })
+    setImage(null)
+  }
+
+  const handleSave = async () => {
+    await new Promise(resolve => setTimeout(resolve, 5000)) // Simulate async operation like database save
+
+
+    // try {
+    //   if (!image) return;
+    //   const base64 = await readAsStringAsync(image, { encoding: EncodingType.Base64 });
+    //   const arrayBuffer = decode(base64);
+    //
+    //   await supabase.storage
+    //     .from('simple')
+    //     .upload(`products/${Date.now()}_${product?.name || 'product'}.jpg`, arrayBuffer, {
+    //       contentType: 'image/jpeg'
+    //     })
+    //     .then(async ({data, error}) => {
+    //       if (error) {
+    //         console.error('Error uploading image:', error);
+    //         Alert.alert('Upload Error', 'There was an error uploading the image. Please try again.');
+    //         return;
+    //       } else {
+    //         console.log('Image uploaded successfully:', data);
+    //       }
+    //     })
+    // } catch (error) {
+    //   console.error('Error uploading image:', error);
+    // }
+
+    reset()
     onClose();
   };
 
@@ -39,35 +82,48 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
       return;
     }
 
-    let result = await ImagePicker.launchImageLibraryAsync({
+    let result = await ImagePicker.launchCameraAsync({
       mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1
+      aspect: [7, 7],
+      quality: .05,
     })
-
-    console.log(result)
 
     if (!result.canceled) {
       setImage(result.assets[0].uri)
+      setProduct(prev => ({...prev, imageUri: result.assets[0].uri} as any))
+
+      console.log('size in kb', result.assets[0].fileSize ? (result.assets[0].fileSize / 1024).toFixed(2) : 'unknown')
     }
   }
 
   return (
-    <BaseModal visible={visible} onClose={onClose} title={t('product.new')}>
+    <BaseModal visible={visible}
+               onClose={onClose}
+               onSuccess={handleSave}
+               loadingText={'Saving product...'}
+               title={t('product.new')}>
       <View style={styles.container}>
         <View style={{gap: 12}}>
-          <Pressable style={{
-            borderWidth: 2,
-            borderStyle: 'dotted',
-            borderColor: 'black',
-            borderRadius: 8,
-            padding: 20,
-            alignItems: 'center',
-            justifyContent: 'center'
-          }} onPress={pickImage}>
-
+          
+          <Text style={{fontSize: 13, fontFamily: 'InterMedium'}}>{'Media'}</Text>
+          <Pressable style={styles.imageContainer} onPress={pickImage}>
+            {
+              image ? (
+                  <Image source={{uri: image}}
+                         style={{
+                           height: 300, width: '100%', borderRadius: 8
+                         }}/>
+                )
+                : (
+                  <View style={{display: 'flex', gap: 4, alignItems: 'center'}}>
+                    <ImagePlus size={20} strokeWidth={2} color={Themes.INFO}/>
+                    <Text
+                      style={{fontSize: 12, color: Themes.INFO, fontFamily: 'InterMedium'}}>{'Add product image'}</Text>
+                  </View>
+                )
+            }
           </Pressable>
+
           <TextInput style={styles.productNameInput}
                      placeholderTextColor={Colors.light.placeholder}
                      placeholder={t('product.name')}
@@ -94,24 +150,23 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
             fontFamily: 'HindSiliguribold',
             color: profit > 0 ? Themes.VOID : Themes.DANGER
           }}>
-            {profit > 0 ? t('product.profitText', {profit}) : t('product.lossText', {loss: Math.abs(profit)})}
+            {isValidCalculation && (
+              (profit > 0) ? t('product.profitText', {profit}) : t('product.lossText', {loss: Math.abs(profit)})
+            )}
           </Text>
+
+          <MegaInput label={t('product.inventory')}
+                     onChangeText={text => setInventory(parseInt(text) || 0)}
+                     theme={'WATER'}
+                     inputMode={'numeric'}
+                     style={{
+                       fontSize: 32,
+                     }}/>
 
           <MegaInput label={t('product.description')}
                      onChangeText={text => setProduct(prev => ({...prev, description: text} as any))}
                      autoGrow={true}
                      theme={'WATER'}/>
-        </View>
-        <View style={styles.footer}>
-          <Button title={t('product.save')}
-                  onPress={handleSave}
-                  size={'lg'}
-                  style={{
-                    width: '100%',
-                    padding: 20,
-                    height: 'auto',
-                    marginTop: 50,
-                  }}/>
         </View>
       </View>
     </BaseModal>
@@ -120,7 +175,6 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 16,
   },
   label: {
@@ -146,5 +200,16 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     paddingHorizontal: 2,
     marginBottom: 5,
-  }
+  },
+  imageContainer: {
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#cecece',
+    borderRadius: 8,
+    padding: 8,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 150,
+  },
 });

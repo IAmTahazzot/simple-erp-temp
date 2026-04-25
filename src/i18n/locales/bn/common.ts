@@ -13,5 +13,6 @@ export default {
         save: 'সংরক্ষণ করুন',
         profitText: 'আপনার লাভ হবে {{profit}} টাকা',
         lossText: 'আপনার ক্ষতি হবে {{loss}} টাকা',
+        inventory: ''
     }
 } as const;
