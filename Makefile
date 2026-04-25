@@ -16,6 +16,9 @@ db:
 delete_database:
 	@MSYS_NO_PATHCONV=1 adb shell -t run-as com.anonymous.app rm erp.db
 	
+dev_rebuild:
+	@eas build --profile development --platform android
+	
 i:
 	@npx expo install $(filter-out $@,$(MAKECMDGOALS))
 

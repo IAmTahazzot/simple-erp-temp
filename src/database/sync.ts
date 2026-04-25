@@ -6,7 +6,7 @@ import { supabase } from '@/services/supabase'
 const TABLES = [
   'users', 'customers', 'suppliers', 'products', 'product_images',
   'inventory', 'orders', 'order_items', 'purchase_orders',
-  'purchase_order_items', 'payments',
+  'purchase_order_items', 'transactions',
 ]
 
 export const sync = async () => {
@@ -14,9 +14,7 @@ export const sync = async () => {
     database,
 
     pullChanges: async ({ lastPulledAt }) => {
-      const since = lastPulledAt
-        ? new Date(lastPulledAt).toISOString()
-        : new Date(0).toISOString()
+      const since = lastPulledAt || 0
 
       const changes: Record<string, any> = {}
 
@@ -69,7 +67,7 @@ export const sync = async () => {
           if (tableChanges.deleted?.length > 0) {
             const { error } = await supabase
               .from(table)
-              .update({ server_deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+              .update({ server_deleted_at: Date.now(), updated_at: Date.now() })
               .in('id', tableChanges.deleted)
             if (error) throw error
           }
@@ -79,20 +77,21 @@ export const sync = async () => {
   })
 }
 
-// WatermelonDB uses numbers for timestamps, Supabase uses ISO strings
+// WatermelonDB uses numbers for timestamps
 const mapFromSupabase = (r: any) => ({
   ...r,
-  created_at: r.created_at ? new Date(r.created_at).getTime() : Date.now(),
-  updated_at: r.updated_at ? new Date(r.updated_at).getTime() : Date.now(),
-  last_modified: r.last_modified ? new Date(r.last_modified).getTime() : Date.now(),
-  server_deleted_at: r.server_deleted_at
-    ? new Date(r.server_deleted_at).getTime()
-    : undefined,
+  created_at: r.created_at || Date.now(),
+  updated_at: r.updated_at || Date.now(),
+  last_modified: r.last_modified || Date.now(),
+  server_deleted_at: r.server_deleted_at || null,
 })
 
-const mapToSupabase = (r: any) => ({
-  ...r,
-  created_at: r.created_at ? new Date(r.created_at).toISOString() : new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  last_modified: new Date().toISOString(),
-})
+const mapToSupabase = (r: any) => {
+  const { _status, _changed, ...rest } = r
+  return {
+    ...rest,
+    created_at: r.created_at || Date.now(),
+    updated_at: Date.now(),
+    last_modified: Date.now(),
+  }
+}
