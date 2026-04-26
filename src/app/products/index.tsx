@@ -1,15 +1,36 @@
-import {Pressable, View, Text, FlatList, Image} from "react-native";
+import {Pressable, View, Text, FlatList, Image, TextInput, ActivityIndicator} from "react-native";
 import {database} from '@/database';
 import Product from '@/database/models/Product';
 import {withObservables} from '@nozbe/watermelondb/react';
 import {Q} from '@nozbe/watermelondb';
-import {useRouter} from 'expo-router'
-import React, {useCallback, useState} from 'react'
+import React, {useCallback, useMemo, useState} from 'react'
 import {UpdateProduct} from '@/components/features/Products/UpdateProduct';
 import ProductImages from '@/database/models/Images';
 import Inventory from '@/database/models/Inventory';
-import {Image as ImageIcon} from 'lucide-react-native'
+import {Image as ImageIcon, Search as SearchIcon} from 'lucide-react-native'
 
+// ─── Fuzzy score ─────────────────────────────────────────────────────────────
+// Returns 0 (no match) to 100 (exact). Results below MIN_SCORE are hidden.
+const MIN_SCORE = 30
+function fuzzyScore(name: string, query: string): number {
+  if (!query) return 100
+  const n = name.toLowerCase()
+  const q = query.toLowerCase()
+
+  if (n === q) return 100
+  if (n.startsWith(q)) return 90
+  if (n.includes(q)) return 80
+
+  // All query chars must appear in order inside name
+  let qi = 0
+  for (let i = 0; i < n.length && qi < q.length; i++) {
+    if (n[i] === q[qi]) qi++
+  }
+
+  return qi === q.length ? 50 : 0  // matched all chars in order → 50, otherwise hide
+}
+
+// ─── ProductItem ──────────────────────────────────────────────────────────────
 const ProductItem = ({item, images, inventory, onPress}: {
   item: Product,
   images: ProductImages[],
@@ -18,41 +39,28 @@ const ProductItem = ({item, images, inventory, onPress}: {
 }) => {
   const stock = inventory[0]?.quantity ?? 0
   const isLowStock = stock < (inventory[0]?.lowStockThreshold || 1)
-  
+
   return (
-    <Pressable style={({pressed}) => {
-      return [
-        [{borderBottomColor: '#e7e7e7', borderBottomWidth: 1, padding: 12}],
-        [pressed && {
-          backgroundColor: '#f0f0f0',
-        }]
-      ]
-    }}
-               onPress={onPress}>
+    <Pressable
+      style={({pressed}) => [
+        {borderBottomColor: '#e7e7e7', borderBottomWidth: 1, padding: 12},
+        pressed && {backgroundColor: '#f0f0f0'},
+      ]}
+      onPress={onPress}>
       <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
-        <View>
-          {images[0]?.imageUrl ? (
-            <Image source={{uri: images[0].imageUrl}}
-                   style={{width: 50, height: 50, borderRadius: 4}}/>
-          ) : (
-            <View style={{
-              width: 50,
-              height: 50,
-              borderRadius: 4,
-              backgroundColor: '#efefef',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <ImageIcon size={24} color="#a0a0a0"/>
-            </View>
-          )}
-        </View>
+        {images[0]?.imageUrl ? (
+          <Image source={{uri: images[0].imageUrl}} style={{width: 50, height: 50, borderRadius: 4}}/>
+        ) : (
+          <View style={{
+            width: 50, height: 50, borderRadius: 4,
+            backgroundColor: '#efefef', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <ImageIcon size={24} color="#a0a0a0"/>
+          </View>
+        )}
         <View style={{gap: 3}}>
           <Text style={{fontSize: 16, fontFamily: 'InterBold'}}>{item.name}</Text>
-          <Text style={{
-            color: isLowStock ? '#d9534f' : '#5cb85c',
-            fontFamily: 'InterMedium'
-          }}>
+          <Text style={{color: isLowStock ? '#d9534f' : '#5cb85c', fontFamily: 'InterMedium'}}>
             {stock} Available
           </Text>
         </View>
@@ -61,14 +69,26 @@ const ProductItem = ({item, images, inventory, onPress}: {
   )
 }
 
+const EnhancedProductItem = withObservables(['item'], ({item}: { item: Product }) => ({
+  item: item.observe(),
+  images: item.images.observe(),
+  inventory: item.inventories.observe(),
+}))(ProductItem)
+
+// ─── Products ─────────────────────────────────────────────────────────────────
 function Products({products}: { products: Product[] }) {
-  const router = useRouter()
   const [isUpdateModalVisible, setIsUpdateModalVisible] = useState(false);
   const [activeProduct, setActiveProduct] = useState<Product>(products[0]);
+  const [query, setQuery] = useState('');
 
-  const handleCloseUpdateModal = () => {
-    setIsUpdateModalVisible(false);
-  }
+  const filtered = useMemo(() => {
+    if (!query.trim()) return products
+    return products
+      .map((p) => ({p, score: fuzzyScore(p.name, query.trim())}))
+      .filter(({score}) => score >= MIN_SCORE)
+      .sort((a, b) => b.score - a.score)
+      .map(({p}) => p)
+  }, [products, query])
 
   const renderItem = useCallback(({item}: { item: Product }) => (
     <EnhancedProductItem
@@ -82,28 +102,50 @@ function Products({products}: { products: Product[] }) {
 
   return (
     <View style={{flex: 1}}>
+      <View style={{
+        flexDirection: 'row', alignItems: 'center', gap: 6,
+        backgroundColor: '#efefef', borderRadius: 12,
+        paddingHorizontal: 12, margin: 12,
+      }}>
+        <SearchIcon size={20} color={'#8c8c8c'}/>
+        <TextInput
+          placeholder={'Filter products'}
+          placeholderTextColor={'#9f9f9f'}
+          value={query}
+          onChangeText={setQuery}
+          style={{fontFamily: 'InterRegular', fontSize: 16, color: '#333333', flex: 1}}
+        />
+      </View>
+
       <FlatList
-        data={products}
+        data={filtered}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        windowSize={5}           // Determines how many invisible screens of items to keep in memory (default 21, reducing saves RAM)
-        maxToRenderPerBatch={10} // Limits items rendered per frame to keep JS thread unblocked 
-        initialNumToRender={15}  // How many items to render explicitly on the first pass
-        removeClippedSubviews={true} // Unmounts off-screen items completely, essential for huge lists
+        windowSize={5}
+        maxToRenderPerBatch={10}
+        initialNumToRender={15}
+        removeClippedSubviews={true}
+        ListEmptyComponent={
+          <Text style={{textAlign: 'center', marginTop: 40, color: '#9f9f9f', fontFamily: 'InterRegular'}}>
+            No products found
+          </Text>
+        }
       />
 
-      <UpdateProduct visible={isUpdateModalVisible}
-                     prevProduct={activeProduct}
-                     onClose={handleCloseUpdateModal}/>
+      <UpdateProduct
+        visible={isUpdateModalVisible}
+        prevProduct={activeProduct}
+        onClose={() => setIsUpdateModalVisible(false)}
+      />
     </View>
   )
 }
 
-const EnhancedProductItem = withObservables(['item'], ({item}: { item: Product }) => ({
-  item: item.observe(),
-  images: item.images.observe(),
-  inventory: item.inventories.observe(),
-}))(ProductItem)
+// ─── Loading wrapper ──────────────────────────────────────────────────────────
+function ProductsLoader({products}: { products?: Product[] }) {
+  if (!products) return <ActivityIndicator style={{flex: 1}} size={'large'}/>
+  return <Products products={products}/>
+}
 
 export default withObservables([], () => ({
   products: database.collections
@@ -112,7 +154,4 @@ export default withObservables([], () => ({
       Q.where('server_deleted_at', Q.eq(null)),
       Q.sortBy('created_at', 'desc')
     ).observe(),
-}))(Products);
-
-
-
+}))(ProductsLoader);
