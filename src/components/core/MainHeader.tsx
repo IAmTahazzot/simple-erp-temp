@@ -1,7 +1,6 @@
 import {DEFAULT_HEADER_HEIGHT} from "@/constants"
 import {useAuthStore} from "@/store/authStore"
-import {Image, StyleSheet, Text, View} from "react-native"
-import {NotificationIcon} from "../icons"
+import {StyleSheet, Text, View} from "react-native"
 
 export const MainHeader = () => {
   const user = useAuthStore((state) => state.user)
@@ -14,11 +13,7 @@ export const MainHeader = () => {
           <Text style={styles.greetingTitle}>Welcome {user?.name || 'Anonymous'}</Text>
         </View>
       </View>
-      <View style={styles.actionContainer}>
-        {/*<View style={styles.notificationIconContainer}>*/}
-        {/*  <NotificationIcon size={24} color='white'/>*/}
-        {/*</View>*/}
-      </View>
+      <View style={styles.actionContainer}></View>
     </View>
   )
 }
@@ -68,5 +63,4 @@ const styles = StyleSheet.create({
     height: 30,
     width: 30
   },
-
 })
