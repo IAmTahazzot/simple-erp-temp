@@ -6,17 +6,21 @@ export const useSync = () => {
   const [isOnline, setIsOnline] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
   const wasOnline = useRef(false)
+  const isSyncingRef = useRef(false) // ✅ ref so the listener always sees current value
 
   useEffect(() => {
     const unsub = NetInfo.addEventListener((state) => {
       const online = state.isConnected === true && state.isInternetReachable === true
 
-      // Only sync on the transition from offline → online
-      if (online && !wasOnline.current && !isSyncing) {
+      if (online && !wasOnline.current && !isSyncingRef.current) {
+        isSyncingRef.current = true
         setIsSyncing(true)
         sync()
           .catch((e) => console.warn('Sync failed:', e))
-          .finally(() => setIsSyncing(false))
+          .finally(() => {
+            isSyncingRef.current = false
+            setIsSyncing(false)
+          })
       }
 
       wasOnline.current = online
@@ -26,5 +30,5 @@ export const useSync = () => {
     return () => unsub()
   }, [])
 
-  return {isOnline, isSyncing}
+  return { isOnline, isSyncing }
 }

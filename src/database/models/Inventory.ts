@@ -10,6 +10,7 @@ export default class Inventory extends Model {
 
   @field('product_id') productId!: string
   @field('quantity') quantity!: number
+  @field('low_stock_threshold') lowStockThreshold!: number
 
   @relation('products', 'product_id') product!: Relation<Product>
 

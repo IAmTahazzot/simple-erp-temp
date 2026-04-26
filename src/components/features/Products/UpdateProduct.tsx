@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {View, Text, TextInput, StyleSheet, Pressable, Alert, Image} from 'react-native';
 import {BaseModal} from '@/components/core/BaseModal';
 import {Button} from '@/components/ui/Button';
@@ -12,20 +12,18 @@ import {ImagePlus} from 'lucide-react-native';
 import {supabase} from '@/services/supabase';
 import {database} from '@/database';
 import Product from '@/database/models/Product';
-import {useOnline} from '@/hooks/use-online';
 
 interface NewProductModalProps {
   visible: boolean;
   onClose: () => void;
+  prevProduct: Product | null
 }
 
-export function NewProductModal({visible, onClose}: NewProductModalProps) {
+export function UpdateProduct({visible, onClose, prevProduct}: NewProductModalProps) {
   const {t} = useCommonTranslation()
 
   const [image, setImage] = useState<string | null>(null);
   const [inventory, setInventory] = useState<number>(0);
-  const {isOnline} = useOnline()
-  
   const [product, setProduct] = useState<{
     name: string;
     price: number;
@@ -34,77 +32,53 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
     imageUri?: string | null;
   }>()
 
+  useEffect(() => {
+    if (visible && prevProduct) {
+      setProduct({
+        name: prevProduct.name,
+        price: prevProduct.price,
+        cost: prevProduct.cost,
+        description: prevProduct.description || '',
+        imageUri: null,
+      });
+      // also set inventory if needed or available somewhere else
+    }
+  }, [visible, prevProduct]);
+
   const profit = product ? Number((product.price - product.cost).toFixed(2)) : 0.00;
   const isValidCalculation = product && !isNaN(profit) && product.price > 0 && product.cost >= 0;
 
   const reset = () => {
     setProduct({
-      name: '',
-      price: 0,
-      cost: 0,
-      description: '',
+      name: product?.name || '',
+      price: product?.price || 0,
+      cost: product?.cost || 0,
+      description: product?.description || '',
       imageUri: null,
     })
     setImage(null)
   }
 
-  const handleSave = async () => {
+  const handleUpdate = async () => {
+    if (!prevProduct || !product) return;
 
-      const NewProduct = await database.write(async() => {
-        return await database.get<Product>('products').create(p => {
-          p.name = product?.name || '';
-          p.price = product?.price || 0;
-          p.cost = product?.cost || 0;
-          p.description = product?.description || '';
-        })
+    await database.write(async() => {
+      await prevProduct.update((record) => {
+        record.name = product.name;
+        record.price = product.price;
+        record.cost = product.cost;
+        record.description = product.description;
       })
-      
-      if (isOnline) {
-        supabase.from('products').upsert({
-          id: NewProduct.id,
-          name: NewProduct.name,
-          price: NewProduct.price,
-          cost: NewProduct.cost,
-          description: NewProduct.description,
-          created_at: NewProduct.createdAt.getTime(),
-          updated_at: NewProduct.updatedAt.getTime()
-        }).then(({ error }) => {
-          if (error) console.warn('Direct push failed, sync will catch it:', error)
-        })
-      }
-      
-    console.info('product saved', NewProduct)
-    
-    // try {
-    //   if (!image) return;
-    //   const base64 = await readAsStringAsync(image, { encoding: EncodingType.Base64 });
-    //   const arrayBuffer = decode(base64);
-    //
-    //   await supabase.storage
-    //     .from('simple')
-    //     .upload(`products/${Date.now()}_${product?.name || 'product'}.jpg`, arrayBuffer, {
-    //       contentType: 'image/jpeg'
-    //     })
-    //     .then(async ({data, error}) => {
-    //       if (error) {
-    //         console.error('Error uploading image:', error);
-    //         Alert.alert('Upload Error', 'There was an error uploading the image. Please try again.');
-    //         return;
-    //       } else {
-    //         console.log('Image uploaded successfully:', data);
-    //       }
-    //     })
-    // } catch (error) {
-    //   console.error('Error uploading image:', error);
-    // }
+    })
 
+    console.info('product updated')
     reset()
     onClose();
   };
 
   const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestCameraPermissionsAsync()
-
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    
     if (!permissionResult.granted) {
       Alert.alert('Permission required', 'Camera permission is required to pick an image.');
       return;
@@ -127,12 +101,12 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
   return (
     <BaseModal visible={visible}
                onClose={onClose}
-               onSuccess={handleSave}
-               loadingText={'Saving product...'}
-               title={t('product.new')}>
+               onSuccess={handleUpdate}
+               loadingText={'Updating product...'}
+               title={'Update Product'}>
       <View style={styles.container}>
         <View style={{gap: 12}}>
-          
+
           <Text style={{fontSize: 13, fontFamily: 'InterMedium'}}>{'Media'}</Text>
           <Pressable style={styles.imageContainer} onPress={pickImage}>
             {
@@ -153,6 +127,7 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
           </Pressable>
 
           <TextInput style={styles.productNameInput}
+                     value={product?.name || ''}
                      placeholderTextColor={Colors.light.placeholder}
                      placeholder={t('product.name')}
                      onChangeText={text => setProduct(prev => ({...prev, name: text} as any))}
@@ -160,6 +135,7 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
 
           <MegaInput label={t('product.price')}
                      theme={'WATER'}
+                     value={(product?.price || 0).toString()}
                      onChangeText={text => setProduct(prev => ({...prev, price: parseFloat(text) || 0} as any))}
                      inputMode={'numeric'}
                      style={{
@@ -167,6 +143,7 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
                      }}/>
 
           <MegaInput label={t('product.cost')}
+                     value={(product?.cost || 0).toString()}
                      onChangeText={text => setProduct(prev => ({...prev, cost: parseFloat(text) || 0} as any))}
                      theme={'WATER'}
                      inputMode={'numeric'}
@@ -184,6 +161,7 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
           </Text>
 
           <MegaInput label={t('product.inventory')}
+                     value={inventory.toString()}
                      onChangeText={text => setInventory(parseInt(text) || 0)}
                      theme={'WATER'}
                      inputMode={'numeric'}
@@ -192,6 +170,7 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
                      }}/>
 
           <MegaInput label={t('product.description')}
+                     value={product?.description || ''}
                      onChangeText={text => setProduct(prev => ({...prev, description: text} as any))}
                      autoGrow={true}
                      theme={'WATER'}/>

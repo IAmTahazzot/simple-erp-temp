@@ -3,13 +3,11 @@ import {database} from '@/database';
 import Product from '@/database/models/Product';
 import {withObservables} from '@nozbe/watermelondb/react';
 import {Q} from '@nozbe/watermelondb';
-import {faker} from '@faker-js/faker/locale/en';
 import {useRouter} from 'expo-router'
 import React, {memo, useCallback, useState} from 'react'
-import { NewProductModal } from '@/components/features/Products/NewProduct';
+import {UpdateProduct} from '@/components/features/Products/UpdateProduct';
 
-// eslint-disable-next-line react/display-name
-const ProductItem = memo(({item, onPress}: { item: Product, onPress: () => void }) => {
+const ProductItem = ({item, onPress}: { item: Product, onPress: () => void }) => {
   return (
     <Pressable style={({pressed}) => {
       return [
@@ -26,19 +24,30 @@ const ProductItem = memo(({item, onPress}: { item: Product, onPress: () => void 
       <Text>Price: ${item.price}</Text>
     </Pressable>
   )
-})
+}
+
+const EnhancedProductItem = withObservables(['item'], ({ item }: { item: Product }) => ({
+  item: item.observe(),
+}))(ProductItem);
 
 function Products({products}: { products: Product[] }) {
   const router = useRouter()
+  const [isUpdateModalVisible, setIsUpdateModalVisible] = useState(false);
+  const [activeProduct, setActiveProduct] = useState<Product>(products[0]);
+  
+  const handleCloseUpdateModal = () => {
+    setIsUpdateModalVisible(false);
+  }
+  
   const renderItem = useCallback(({item}: { item: Product }) => (
-    <ProductItem 
+    <EnhancedProductItem 
       item={item} 
-      onPress={() => router.navigate({
-        pathname: '/products/[productId]',
-        params: {productId: item.id}
-      })} 
+      onPress={() => {
+        setActiveProduct(item)
+        setIsUpdateModalVisible(true)
+      }}
     />
-  ), [router]);
+  ), []);
 
   return (
     <View style={{flex: 1}}>
@@ -52,6 +61,9 @@ function Products({products}: { products: Product[] }) {
         removeClippedSubviews={true} // Unmounts off-screen items completely, essential for huge lists
       />
 
+      <UpdateProduct visible={isUpdateModalVisible}
+                     prevProduct={activeProduct}
+                     onClose={handleCloseUpdateModal}/>
     </View>
   )
 }
