@@ -1,6 +1,7 @@
 import { synchronize } from '@nozbe/watermelondb/sync'
 import { database } from '@/database'
 import { supabase } from '@/services/supabase'
+import {ToastAndroid} from 'react-native';
 
 const TABLES = [
   'users', 'customers', 'suppliers', 'products', 'product_images',
@@ -53,37 +54,36 @@ export const sync = async () => {
       },
 
       pushChanges: async ({ changes }) => {
-        await Promise.all(
-          TABLES.map(async (table) => {
-            const tableChanges = (changes as any)[table]
-            if (!tableChanges) return
+        for (const table of TABLES) {
+          const tableChanges = (changes as any)[table]
+          if (!tableChanges) continue
 
-            const toUpsert = [
-              ...(tableChanges.created ?? []),
-              ...(tableChanges.updated ?? []),
-            ]
+          const toUpsert = [
+            ...(tableChanges.created ?? []),
+            ...(tableChanges.updated ?? []),
+          ]
 
-            if (toUpsert.length > 0) {
-              const { error } = await supabase
-                .from(table)
-                .upsert(toUpsert.map(mapToSupabase))
-              if (error) throw error
-            }
+          if (toUpsert.length > 0) {
+            const { error } = await supabase
+              .from(table)
+              .upsert(toUpsert.map(mapToSupabase))
+            if (error) throw error
+          }
 
-            if (tableChanges.deleted?.length > 0) {
-              const now = Date.now() // ✅ bigint column expects number
-              const { error } = await supabase
-                .from(table)
-                .update({ server_deleted_at: now, updated_at: now })
-                .in('id', tableChanges.deleted)
-              if (error) throw error
-            }
-          })
-        )
+          if (tableChanges.deleted?.length > 0) {
+            const now = Date.now() // ✅ bigint column expects number
+            const { error } = await supabase
+              .from(table)
+              .update({ server_deleted_at: now, updated_at: now })
+              .in('id', tableChanges.deleted)
+            if (error) throw error
+          }
+        }
       },
     })
   } finally {
     isSyncing = false
+    ToastAndroid.show('Sync complete', ToastAndroid.SHORT)
   }
 }
 

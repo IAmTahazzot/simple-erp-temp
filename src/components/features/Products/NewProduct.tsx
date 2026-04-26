@@ -13,6 +13,7 @@ import {supabase} from '@/services/supabase';
 import {database} from '@/database';
 import Product from '@/database/models/Product';
 import {useOnline} from '@/hooks/use-online';
+import { createProduct} from '@/features/products/functions';
 
 interface NewProductModalProps {
   visible: boolean;
@@ -24,6 +25,7 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
 
   const [image, setImage] = useState<string | null>(null);
   const [inventory, setInventory] = useState<number>(0);
+  const [stockWarning, setStockWarning] = useState<number>(0);
   const {isOnline} = useOnline()
   
   const [product, setProduct] = useState<{
@@ -49,54 +51,18 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
   }
 
   const handleSave = async () => {
-
-      const NewProduct = await database.write(async() => {
-        return await database.get<Product>('products').create(p => {
-          p.name = product?.name || '';
-          p.price = product?.price || 0;
-          p.cost = product?.cost || 0;
-          p.description = product?.description || '';
-        })
-      })
-      
-      if (isOnline) {
-        supabase.from('products').upsert({
-          id: NewProduct.id,
-          name: NewProduct.name,
-          price: NewProduct.price,
-          cost: NewProduct.cost,
-          description: NewProduct.description,
-          created_at: NewProduct.createdAt.getTime(),
-          updated_at: NewProduct.updatedAt.getTime()
-        }).then(({ error }) => {
-          if (error) console.warn('Direct push failed, sync will catch it:', error)
-        })
-      }
-      
-    console.info('product saved', NewProduct)
-    
-    // try {
-    //   if (!image) return;
-    //   const base64 = await readAsStringAsync(image, { encoding: EncodingType.Base64 });
-    //   const arrayBuffer = decode(base64);
-    //
-    //   await supabase.storage
-    //     .from('simple')
-    //     .upload(`products/${Date.now()}_${product?.name || 'product'}.jpg`, arrayBuffer, {
-    //       contentType: 'image/jpeg'
-    //     })
-    //     .then(async ({data, error}) => {
-    //       if (error) {
-    //         console.error('Error uploading image:', error);
-    //         Alert.alert('Upload Error', 'There was an error uploading the image. Please try again.');
-    //         return;
-    //       } else {
-    //         console.log('Image uploaded successfully:', data);
-    //       }
-    //     })
-    // } catch (error) {
-    //   console.error('Error uploading image:', error);
-    // }
+    await createProduct(
+      {
+        name: product?.name || '',
+        price: product?.price || 0,
+        cost: product?.cost || 0,
+        description: product?.description || '',
+      },
+      image,           // picker URI from your existing state
+      inventory,       // your existing state
+      stockWarning,    // your existing state
+      isOnline,
+    )
 
     reset()
     onClose();
@@ -185,6 +151,14 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
 
           <MegaInput label={t('product.inventory')}
                      onChangeText={text => setInventory(parseInt(text) || 0)}
+                     theme={'WATER'}
+                     inputMode={'numeric'}
+                     style={{
+                       fontSize: 32,
+                     }}/>
+          
+          <MegaInput label={'Low stock threshold'}
+                     onChangeText={text => setStockWarning(parseInt(text) || 0)}
                      theme={'WATER'}
                      inputMode={'numeric'}
                      style={{

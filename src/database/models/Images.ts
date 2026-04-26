@@ -1,11 +1,12 @@
 import { Model } from '@nozbe/watermelondb'
-import { field, date, readonly } from '@nozbe/watermelondb/decorators'
+import {field, date, readonly, relation} from '@nozbe/watermelondb/decorators'
+import Product from '@/database/models/Product';
 
 export default class ProductImages extends Model {
   static table = 'product_images'
   
   static associations = {
-    products: { type: 'belongs_to', key: 'product_id' }
+    products: { type: 'belongs_to' as const, key: 'product_id' }
   } as const
 
   @field('product_id') productId!: string
@@ -16,5 +17,7 @@ export default class ProductImages extends Model {
   @readonly @date('updated_at') updatedAt!: Date
   @field('last_modified') lastModified?: number
   @field('server_deleted_at') serverDeletedAt?: number
+  
+  @relation('products', 'product_id') product!: Product
 }
 

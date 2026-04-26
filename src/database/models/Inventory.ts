@@ -11,11 +11,10 @@ export default class Inventory extends Model {
   @field('product_id') productId!: string
   @field('quantity') quantity!: number
   @field('low_stock_threshold') lowStockThreshold!: number
-
-  @relation('products', 'product_id') product!: Relation<Product>
-
   @readonly @date('created_at') createdAt!: Date
   @readonly @date('updated_at') updatedAt!: Date
   @field('last_modified') lastModified?: number
   @field('server_deleted_at') serverDeletedAt?: number
+  
+  @relation('products', 'product_id') product!: Product
 }

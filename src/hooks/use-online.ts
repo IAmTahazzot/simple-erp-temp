@@ -19,5 +19,7 @@ export const useOnline = () => {
     };
   }, []); 
   
-  return { isOnline };
+  return { 
+    isOnline: isOnline === null ? false : isOnline 
+  };
 }

@@ -19,6 +19,9 @@ delete_database:
 dev_rebuild:
 	@eas build --profile development --platform android
 	
+shell:
+	@MSYS_NO_PATHCONV=1 adb shell $(filter-out $@,$(MAKECMDGOALS))
+	
 i:
 	@npx expo install $(filter-out $@,$(MAKECMDGOALS))
 

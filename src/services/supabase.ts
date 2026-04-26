@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import {useAuthStore} from '@/store/authStore';
 
 export const supabase = createClient(
   process.env.EXPO_PUBLIC_SUPABASE_URL!,
@@ -23,7 +24,6 @@ const secureAuth = async () => {
 
   if (res.data) {
     const email = res.data.user?.email
-    
     console.info('Successfully signed in as: ', email);
   }
 };
