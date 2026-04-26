@@ -1,10 +1,10 @@
 import {View, Text, FlatList, TextInput, Pressable, ActivityIndicator} from 'react-native'
 import {database} from '@/database'
-import Customer from '@/database/models/Customer'
+import Supplier from '@/database/models/Supplier'
 import {withObservables} from '@nozbe/watermelondb/react'
 import {Q} from '@nozbe/watermelondb'
 import React, {useCallback, useMemo, useState} from 'react'
-import {Search as SearchIcon} from 'lucide-react-native'
+import {Search as SearchIcon, Building2} from 'lucide-react-native'
 import {useRouter} from 'expo-router'
 
 function fuzzyScore(name: string, query: string): number {
@@ -18,7 +18,7 @@ function fuzzyScore(name: string, query: string): number {
   return qi === q.length ? 50 : 0
 }
 
-const CustomerItem = ({item, onPress}: { item: Customer; onPress: () => void }) => (
+const SupplierItem = ({item, onPress}: { item: Supplier; onPress: () => void }) => (
   <Pressable
     onPress={onPress}
     style={({pressed}) => [{
@@ -26,37 +26,36 @@ const CustomerItem = ({item, onPress}: { item: Customer; onPress: () => void }) 
       flexDirection: 'row', alignItems: 'center', gap: 12,
     }, pressed && {backgroundColor: '#f0f0f0'}]}>
     <View style={{
-      width: 40, height: 40, borderRadius: 20,
-      backgroundColor: '#111827', alignItems: 'center', justifyContent: 'center',
+      width: 40, height: 40, borderRadius: 10,
+      backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
     }}>
-      <Text style={{color: '#fff', fontFamily: 'InterBold', fontSize: 16}}>
-        {item.name.charAt(0).toUpperCase()}
-      </Text>
+      <Building2 size={20} color="#374151"/>
     </View>
     <View style={{gap: 2}}>
       <Text style={{fontSize: 16, fontFamily: 'InterBold'}}>{item.name}</Text>
-      {item.phone && <Text style={{color: '#6b7280', fontFamily: 'InterRegular'}}>{item.phone}</Text>}
+      {item.contactName && <Text style={{color: '#6b7280', fontFamily: 'InterRegular'}}>{item.contactName}</Text>}
+      {item.phone && <Text style={{color: '#9ca3af', fontFamily: 'InterRegular', fontSize: 13}}>{item.phone}</Text>}
     </View>
   </Pressable>
 )
 
-function Customers({customers}: { customers: Customer[] }) {
+function Suppliers({suppliers}: { suppliers: Supplier[] }) {
   const router = useRouter()
   const [query, setQuery] = useState('')
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return customers
-    return customers
-      .map((c) => ({c, score: fuzzyScore(c.name, query.trim())}))
+    if (!query.trim()) return suppliers
+    return suppliers
+      .map((s) => ({s, score: fuzzyScore(s.name, query.trim())}))
       .filter(({score}) => score >= 30)
       .sort((a, b) => b.score - a.score)
-      .map(({c}) => c)
-  }, [customers, query])
+      .map(({s}) => s)
+  }, [suppliers, query])
 
-  const renderItem = useCallback(({item}: { item: Customer }) => (
-    <CustomerItem
+  const renderItem = useCallback(({item}: { item: Supplier }) => (
+    <SupplierItem
       item={item}
-      onPress={() => router.push({pathname: '/contacts/[id]', params: {id: item.id, type: 'customer'}})}
+      onPress={() => router.push({pathname: '/contacts/[id]', params: {id: item.id, type: 'supplier'}})}
     />
   ), [])
 
@@ -68,7 +67,7 @@ function Customers({customers}: { customers: Customer[] }) {
       }}>
         <SearchIcon size={20} color={'#8c8c8c'}/>
         <TextInput
-          placeholder={'Search customers'}
+          placeholder={'Search suppliers'}
           placeholderTextColor={'#9f9f9f'}
           value={query}
           onChangeText={setQuery}
@@ -85,7 +84,7 @@ function Customers({customers}: { customers: Customer[] }) {
         removeClippedSubviews={true}
         ListEmptyComponent={
           <Text style={{textAlign: 'center', marginTop: 40, color: '#9f9f9f', fontFamily: 'InterRegular'}}>
-            No customers found
+            No suppliers found
           </Text>
         }
       />
@@ -93,14 +92,14 @@ function Customers({customers}: { customers: Customer[] }) {
   )
 }
 
-function CustomersLoader({customers}: { customers?: Customer[] }) {
-  if (!customers) return <ActivityIndicator style={{flex: 1}} size={'large'}/>
-  return <Customers customers={customers}/>
+function SuppliersLoader({suppliers}: { suppliers?: Supplier[] }) {
+  if (!suppliers) return <ActivityIndicator style={{flex: 1}} size={'large'}/>
+  return <Suppliers suppliers={suppliers}/>
 }
 
 export default withObservables([], () => ({
-  customers: database.collections
-    .get<Customer>('customers')
+  suppliers: database.collections
+    .get<Supplier>('suppliers')
     .query(Q.where('server_deleted_at', Q.eq(null)), Q.sortBy('created_at', 'desc'))
     .observe(),
-}))(CustomersLoader)
+}))(SuppliersLoader)
