@@ -22,11 +22,11 @@ const NAV_LINKS: NavLink[][] = [
       href: '/products',
       icon: <Package size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.6}/>
     },
-    {
-      label: 'Inventory',
-      href: '/products/inventory',
-      icon: <Archive size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.6}/>
-    },
+    // {
+    //   label: 'Inventory',
+    //   href: '/products/inventory',
+    //   icon: <Archive size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.6}/>
+    // },
     {
       label: 'Purchase orders',
       href: '/products/purchaseorder',
@@ -56,10 +56,9 @@ export function ProductHeader() {
                   // let's open new modal for new product creation
                   if (activeLink.href === '/products/purchaseorder') {
                     router.push('/products/purchaseorder/new')
-                    return 
+                  } else {
+                    setIsProductModelVisible(true);
                   }
-                  
-                  setIsProductModelVisible(true);
                 }}
                 variant={'ghost'}/>}
 
