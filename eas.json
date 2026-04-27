@@ -12,11 +12,19 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://rpafghppuswfxjushwim.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_KEY": "sb_publishable_349r38KjU3KBZlebVs1jvA_wBh-NZUs"
       }
     },
     "production": {
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://rpafghppuswfxjushwim.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_KEY": "sb_publishable_349r38KjU3KBZlebVs1jvA_wBh-NZUs"
       }
     }
   },

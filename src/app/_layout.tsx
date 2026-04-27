@@ -5,16 +5,22 @@ import { useEffect, useState } from "react";
 import AuthScreen from "@/components/auth";
 import { NavigationBar } from "@/components/core/NavigationBar";
 import { Colors } from "@/constants/colors";
+import { useSync } from "@/hooks/use-sync";
 import { initI18n } from "@/i18n";
 import { useAuthStore } from "@/store/authStore";
-import {StyleSheet, View, Text, ActivityIndicator} from "react-native";
-import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from "@expo-google-fonts/inter";
-import {useSync} from '@/hooks/use-sync';
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  useFonts,
+} from "@expo-google-fonts/inter";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 export default function RootLayout() {
   const { isLoggedIn, checkAuth, isLoading } = useAuthStore();
   const [i18nReady, setI18nReady] = useState(false);
-  const { isOnline, isSyncing } = useSync()
+  const { isOnline, isSyncing } = useSync();
 
   const [fontsLoaded, fontError] = useFonts({
     InterRegular: Inter_400Regular,
@@ -27,17 +33,19 @@ export default function RootLayout() {
     HindSiliguriLight: require("@/assets/fonts/Hind Siliguri Light.ttf"),
     HindSiliguribold: require("@/assets/fonts/Hind Siliguri Bold.ttf"),
   });
-  
+
+  const [isAppReady, setIsAppReady] = useState(false);
+
   useEffect(() => {
     let active = true;
 
     async function initialize() {
       await checkAuth(); // Check for existing user token
     }
-    
-    initialize().then(r => {
-      console.info('Auth check completed');
-    })
+
+    initialize().then((r) => {
+      console.info("Auth check completed");
+    });
 
     initI18n().finally(() => {
       if (active) {
@@ -50,16 +58,34 @@ export default function RootLayout() {
     };
   }, [checkAuth]);
 
-  if (!i18nReady || isLoading || isSyncing) {
-    return <View style={{flex: 1}}>
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.dark.background, gap: 6}}>
-        <ActivityIndicator size={'large'} />
-        
-        <Text style={{color: '#fff', fontSize: 16, fontFamily: 'InterMedium'}}>
-          Getting things ready{isSyncing ? ' (syncing data...)' : ''}...
-        </Text>
+  useEffect(() => {
+    if (i18nReady && !isLoading && !isSyncing) {
+      setIsAppReady(true);
+    }
+  }, [i18nReady, isLoading, isSyncing]);
+
+  if (!isAppReady) {
+    return (
+      <View style={{ flex: 1 }}>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: Colors.dark.background,
+            gap: 6,
+          }}
+        >
+          <ActivityIndicator size={"large"} />
+
+          <Text
+            style={{ color: "#fff", fontSize: 16, fontFamily: "InterMedium" }}
+          >
+            Getting things ready{isSyncing ? " (syncing data...)" : ""}...
+          </Text>
+        </View>
       </View>
-    </View>;
+    );
   }
 
   return (

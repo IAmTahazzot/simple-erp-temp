@@ -118,15 +118,15 @@ export const NavigationBar = () => {
                 </View>
             </View>
 
-            {/* Separate Search Button */}
-            <Pressable
-                onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
-                style={styles.searchButtonWrapper}
-            >
-                <View style={styles.searchIconContainer}>
-                    <SearchIcon size={24} color="#000" />
-                </View>
-            </Pressable>
+            {/*/!* Separate Search Button *!/*/}
+            {/*<Pressable*/}
+            {/*    onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}*/}
+            {/*    style={styles.searchButtonWrapper}*/}
+            {/*>*/}
+            {/*    <View style={styles.searchIconContainer}>*/}
+            {/*        <SearchIcon size={24} color="#000" />*/}
+            {/*    </View>*/}
+            {/*</Pressable>*/}
         </View>
     )
 }
@@ -135,14 +135,15 @@ const styles = StyleSheet.create({
     outerContainer: {
         position: 'absolute',
         bottom: 0,
-        left: 0,
-        right: 0,
+        left: '10%',
+        right: '10%',
         paddingVertical: 15,
         paddingHorizontal: 10,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 2,
         zIndex: 100,
+        width: '80%'
     },
     navContainerWrapper: {
         flex: 1,

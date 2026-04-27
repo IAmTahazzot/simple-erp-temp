@@ -1,172 +1,232 @@
 // app/index.tsx
-import React, {useMemo, useState} from 'react'
-import {ScrollView, Text, View, StyleSheet} from 'react-native'
-import {BaseLayout} from '@/components/core/BaseLayout'
-import {MainHeader} from '@/components/core/MainHeader'
-import {Select} from '@/components/ui/Select'
-import {withObservables} from '@nozbe/watermelondb/react'
-import {Q} from '@nozbe/watermelondb'
-import {database} from '@/database'
-import Order from '@/database/models/Order'
-import Customer from '@/database/models/Customer'
-import Supplier from '@/database/models/Supplier'
-import {TrendingUp, ShoppingCart, Users, Building2} from 'lucide-react-native'
+import { BaseLayout } from "@/components/core/BaseLayout";
+import { MainHeader } from "@/components/core/MainHeader";
+import { Select } from "@/components/ui/Select";
+import { database } from "@/database";
+import Customer from "@/database/models/Customer";
+import Order from "@/database/models/Order";
+import Supplier from "@/database/models/Supplier";
+import { Q } from "@nozbe/watermelondb";
+import { withObservables } from "@nozbe/watermelondb/react";
+import {
+  Building2,
+  ShoppingCart,
+  TrendingUp,
+  Users,
+} from "lucide-react-native";
+import React, { useMemo, useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 // ─── Time period helpers ──────────────────────────────────────────────────────
-function getPeriodRange(period: string): {start: number; end: number} {
-  const now = new Date()
-  const start = new Date()
-  const end = now.getTime()
+function getPeriodRange(period: string): { start: number; end: number } {
+  const now = new Date();
+  const start = new Date();
+  const end = now.getTime();
 
   switch (period) {
-    case 'today':
-      start.setHours(0, 0, 0, 0)
-      break
-    case 'this_week':
-      start.setDate(now.getDate() - now.getDay())
-      start.setHours(0, 0, 0, 0)
-      break
-    case 'last_week': {
-      const lastMon = new Date(now)
-      lastMon.setDate(now.getDate() - now.getDay() - 7)
-      lastMon.setHours(0, 0, 0, 0)
-      const lastSun = new Date(lastMon)
-      lastSun.setDate(lastMon.getDate() + 6)
-      lastSun.setHours(23, 59, 59, 999)
-      return {start: lastMon.getTime(), end: lastSun.getTime()}
+    case "today":
+      start.setHours(0, 0, 0, 0);
+      break;
+    case "this_week":
+      start.setDate(now.getDate() - now.getDay());
+      start.setHours(0, 0, 0, 0);
+      break;
+    case "last_week": {
+      const lastMon = new Date(now);
+      lastMon.setDate(now.getDate() - now.getDay() - 7);
+      lastMon.setHours(0, 0, 0, 0);
+      const lastSun = new Date(lastMon);
+      lastSun.setDate(lastMon.getDate() + 6);
+      lastSun.setHours(23, 59, 59, 999);
+      return { start: lastMon.getTime(), end: lastSun.getTime() };
     }
-    case 'this_month':
-      start.setDate(1)
-      start.setHours(0, 0, 0, 0)
-      break
-    case 'last_month': {
-      const firstThisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-      const firstLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-      return {start: firstLastMonth.getTime(), end: firstThisMonth.getTime() - 1}
+    case "this_month":
+      start.setDate(1);
+      start.setHours(0, 0, 0, 0);
+      break;
+    case "last_month": {
+      const firstThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const firstLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      return {
+        start: firstLastMonth.getTime(),
+        end: firstThisMonth.getTime() - 1,
+      };
     }
-    case 'this_year':
-      start.setMonth(0, 1)
-      start.setHours(0, 0, 0, 0)
-      break
-    case 'last_year': {
-      const firstThisYear = new Date(now.getFullYear(), 0, 1)
-      const firstLastYear = new Date(now.getFullYear() - 1, 0, 1)
-      return {start: firstLastYear.getTime(), end: firstThisYear.getTime() - 1}
+    case "this_year":
+      start.setMonth(0, 1);
+      start.setHours(0, 0, 0, 0);
+      break;
+    case "last_year": {
+      const firstThisYear = new Date(now.getFullYear(), 0, 1);
+      const firstLastYear = new Date(now.getFullYear() - 1, 0, 1);
+      return {
+        start: firstLastYear.getTime(),
+        end: firstThisYear.getTime() - 1,
+      };
     }
-    case 'all_time':
+    case "all_time":
     default:
-      return {start: 0, end: end}
+      return { start: 0, end: end };
   }
 
-  return {start: start.getTime(), end}
+  return { start: start.getTime(), end };
 }
 
-const PERIOD_GROUPS = [{
-  label: 'Time Period',
-  items: [
-    {label: 'Today',      value: 'today'},
-    {label: 'This Week',  value: 'this_week'},
-    {label: 'Last Week',  value: 'last_week'},
-    {label: 'This Month', value: 'this_month'},
-    {label: 'Last Month', value: 'last_month'},
-    {label: 'This Year',  value: 'this_year'},
-    {label: 'Last Year',  value: 'last_year'},
-    {label: 'All Time',   value: 'all_time'},
-  ]
-}]
+const PERIOD_GROUPS = [
+  {
+    label: "Time Period",
+    items: [
+      { label: "Today", value: "today" },
+      { label: "This Week", value: "this_week" },
+      { label: "Last Week", value: "last_week" },
+      { label: "This Month", value: "this_month" },
+      { label: "Last Month", value: "last_month" },
+      { label: "This Year", value: "this_year" },
+      { label: "Last Year", value: "last_year" },
+      { label: "All Time", value: "all_time" },
+    ],
+  },
+];
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
-function Dashboard({orders, customers, suppliers}: {
-  orders: Order[]
-  customers: Customer[]
-  suppliers: Supplier[]
+function DashboardStats({
+  orders,
+  customers,
+  suppliers,
+}: {
+  orders: Order[];
+  customers: Customer[];
+  suppliers: Supplier[];
 }) {
-  const [period, setPeriod] = useState('this_month')
+  const [period, setPeriod] = useState("this_month");
 
-  const {revenue, orderCount, profit} = useMemo(() => {
-    const {start, end} = getPeriodRange(period)
-    const filtered = orders.filter((o) => o.orderDate.getTime() >= start && o.orderDate.getTime() <= end)
-    const revenue = filtered.reduce((sum, o) => sum + o.totalAmount, 0)
+  const { revenue, orderCount, profit } = useMemo(() => {
+    const { start, end } = getPeriodRange(period);
+    const filtered = orders.filter(
+      (o) => o.orderDate.getTime() >= start && o.orderDate.getTime() <= end,
+    );
+    const revenue = filtered.reduce((sum, o) => sum + o.totalAmount, 0);
     // Rough profit: revenue minus discounts (discountValue already factored into totalAmount)
     // For true profit you'd need product cost — using 30% margin estimate as placeholder
-    const profit = revenue * 0.3
-    return {revenue, orderCount: filtered.length, profit}
-  }, [orders, period])
+    const profit = revenue * 0.3;
+    return { revenue, orderCount: filtered.length, profit };
+  }, [orders, period]);
 
   return (
-    <BaseLayout head={<MainHeader/>}>
-      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      contentContainerStyle={s.scroll}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* ── Revenue Card ── */}
+      <View style={s.revenueCard}>
+        <View style={s.revenueTop}>
+          <Select
+            groups={PERIOD_GROUPS}
+            value={period}
+            onValueChange={setPeriod}
+            triggerStyle={s.selectTrigger}
+          />
+        </View>
+        <Text style={s.revenueLabel}>Total Revenue</Text>
+        <Text style={s.revenueAmount}>
+          ৳
+          {revenue.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </Text>
+      </View>
 
-        {/* ── Revenue Card ── */}
-        <View style={s.revenueCard}>
-          <View style={s.revenueTop}>
-            <Select
-              groups={PERIOD_GROUPS}
-              value={period}
-              onValueChange={setPeriod}
-              triggerStyle={s.selectTrigger}
-            />
+      {/* ── 2x2 Stat Grid ── */}
+      <View style={s.grid}>
+        <View style={[s.statCard, { backgroundColor: "#1a1a2e" }]}>
+          <View style={[s.statIcon, { backgroundColor: "#ffffff18" }]}>
+            <ShoppingCart size={18} color="#fff" />
           </View>
-          <Text style={s.revenueLabel}>Total Revenue</Text>
-          <Text style={s.revenueAmount}>৳{revenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+          <Text style={[s.statValue, { color: "#fff" }]}>{orderCount}</Text>
+          <Text style={[s.statLabel, { color: "#ffffff88" }]}>Orders</Text>
         </View>
 
-        {/* ── 2x2 Stat Grid ── */}
-        <View style={s.grid}>
-
-          <View style={[s.statCard, {backgroundColor: '#1a1a2e'}]}>
-            <View style={[s.statIcon, {backgroundColor: '#ffffff18'}]}>
-              <ShoppingCart size={18} color="#fff"/>
-            </View>
-            <Text style={[s.statValue, {color: '#fff'}]}>{orderCount}</Text>
-            <Text style={[s.statLabel, {color: '#ffffff88'}]}>Orders</Text>
+        <View style={[s.statCard, { backgroundColor: "#064e3b" }]}>
+          <View style={[s.statIcon, { backgroundColor: "#ffffff18" }]}>
+            <TrendingUp size={18} color="#fff" />
           </View>
-
-          <View style={[s.statCard, {backgroundColor: '#064e3b'}]}>
-            <View style={[s.statIcon, {backgroundColor: '#ffffff18'}]}>
-              <TrendingUp size={18} color="#fff"/>
-            </View>
-            <Text style={[s.statValue, {color: '#fff'}]}>
-              ৳{profit >= 1000
+          <Text style={[s.statValue, { color: "#fff" }]}>
+            ৳
+            {profit >= 1000
               ? `${(profit / 1000).toFixed(1)}k`
               : profit.toFixed(0)}
-            </Text>
-            <Text style={[s.statLabel, {color: '#ffffff88'}]}>Est. Profit</Text>
-          </View>
-
-          <View style={[s.statCard, {backgroundColor: '#fff', borderWidth: 1, borderColor: '#f0f0f0'}]}>
-            <View style={[s.statIcon, {backgroundColor: '#f3f4f6'}]}>
-              <Users size={18} color="#111827"/>
-            </View>
-            <Text style={[s.statValue, {color: '#111827'}]}>{customers.length}</Text>
-            <Text style={[s.statLabel, {color: '#6b7280'}]}>Customers</Text>
-          </View>
-
-          <View style={[s.statCard, {backgroundColor: '#fff', borderWidth: 1, borderColor: '#f0f0f0'}]}>
-            <View style={[s.statIcon, {backgroundColor: '#f3f4f6'}]}>
-              <Building2 size={18} color="#111827"/>
-            </View>
-            <Text style={[s.statValue, {color: '#111827'}]}>{suppliers.length}</Text>
-            <Text style={[s.statLabel, {color: '#6b7280'}]}>Suppliers</Text>
-          </View>
-
+          </Text>
+          <Text style={[s.statLabel, { color: "#ffffff88" }]}>Est. Profit</Text>
         </View>
-      </ScrollView>
-    </BaseLayout>
-  )
+
+        <View
+          style={[
+            s.statCard,
+            {
+              backgroundColor: "#fff",
+              borderWidth: 1,
+              borderColor: "#f0f0f0",
+            },
+          ]}
+        >
+          <View style={[s.statIcon, { backgroundColor: "#f3f4f6" }]}>
+            <Users size={18} color="#111827" />
+          </View>
+          <Text style={[s.statValue, { color: "#111827" }]}>
+            {customers.length}
+          </Text>
+          <Text style={[s.statLabel, { color: "#6b7280" }]}>Customers</Text>
+        </View>
+
+        <View
+          style={[
+            s.statCard,
+            {
+              backgroundColor: "#fff",
+              borderWidth: 1,
+              borderColor: "#f0f0f0",
+            },
+          ]}
+        >
+          <View style={[s.statIcon, { backgroundColor: "#f3f4f6" }]}>
+            <Building2 size={18} color="#111827" />
+          </View>
+          <Text style={[s.statValue, { color: "#111827" }]}>
+            {suppliers.length}
+          </Text>
+          <Text style={[s.statLabel, { color: "#6b7280" }]}>Suppliers</Text>
+        </View>
+      </View>
+    </ScrollView>
+  );
 }
 
 // ─── withObservables ──────────────────────────────────────────────────────────
 
-export default withObservables([], () => ({
-  orders: database.collections.get<Order>('orders')
-    .query(Q.where('server_deleted_at', Q.eq(null))).observe(),
-  customers: database.collections.get<Customer>('customers')
-    .query(Q.where('server_deleted_at', Q.eq(null))).observe(),
-  suppliers: database.collections.get<Supplier>('suppliers')
-    .query(Q.where('server_deleted_at', Q.eq(null))).observe(),
-}))(Dashboard)
+const EnhancedDashboardStats = withObservables([], () => ({
+  orders: database.collections
+    .get<Order>("orders")
+    .query(Q.where("server_deleted_at", Q.eq(null)))
+    .observe(),
+  customers: database.collections
+    .get<Customer>("customers")
+    .query(Q.where("server_deleted_at", Q.eq(null)))
+    .observe(),
+  suppliers: database.collections
+    .get<Supplier>("suppliers")
+    .query(Q.where("server_deleted_at", Q.eq(null)))
+    .observe(),
+}))(DashboardStats);
+
+export default function Dashboard() {
+  return (
+    <BaseLayout head={<MainHeader />}>
+      <EnhancedDashboardStats />
+    </BaseLayout>
+  );
+}
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
@@ -176,10 +236,10 @@ const s = StyleSheet.create({
     gap: 16,
   },
   revenueCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 20,
     padding: 20,
-    shadowColor: 'rgb(0 0 0 / 0.51)',
+    shadowColor: "rgb(0 0 0 / 0.51)",
     shadowOpacity: 0.06,
     shadowRadius: 12,
     elevation: 12,
@@ -187,38 +247,38 @@ const s = StyleSheet.create({
   },
   revenueTop: {
     marginBottom: 8,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     minWidth: 160,
   },
   selectTrigger: {
-    borderColor: '#e5e7eb',
-    backgroundColor: '#f9fafb',
+    borderColor: "#e5e7eb",
+    backgroundColor: "#f9fafb",
     height: 36,
   },
   revenueLabel: {
     fontSize: 13,
-    color: '#6b7280',
-    fontFamily: 'InterMedium',
+    color: "#6b7280",
+    fontFamily: "InterMedium",
     marginTop: 4,
   },
   revenueAmount: {
     fontSize: 42,
-    fontFamily: 'InterBold',
-    color: '#111827',
+    fontFamily: "InterBold",
+    color: "#111827",
     letterSpacing: -1,
   },
   grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
   },
   statCard: {
     flex: 1,
-    minWidth: '45%',
+    minWidth: "45%",
     borderRadius: 16,
     padding: 16,
     gap: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
@@ -227,17 +287,17 @@ const s = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 4,
   },
   statValue: {
     fontSize: 26,
-    fontFamily: 'InterBold',
+    fontFamily: "InterBold",
     letterSpacing: -0.5,
   },
   statLabel: {
     fontSize: 13,
-    fontFamily: 'InterMedium',
+    fontFamily: "InterMedium",
   },
-})
+});
