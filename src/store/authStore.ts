@@ -48,6 +48,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       // })
       const token = await SecureStore.getItemAsync('userToken');
       const userInfoStr = await SecureStore.getItemAsync('userInfo');
+      
       if (token && userInfoStr) {
         set({user: JSON.parse(userInfoStr), isLoggedIn: true, isLoading: false});
       } else {

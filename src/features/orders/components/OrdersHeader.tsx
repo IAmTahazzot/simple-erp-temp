@@ -16,7 +16,8 @@ const ICON_COLOR = '#111827';
 
 export function OrdersHeader() {
   const [isContactModelVisible, setIsContactModelVisible] = useState(false);
-
+  const router = useRouter()
+  
   return (
     <View style={styles.header}>
       {/*<DropdownNavigation links={NAV_LINKS} onChange={handleOnLinkChange}/>*/}
@@ -34,14 +35,15 @@ export function OrdersHeader() {
               rightIcon={<CirclePlus size={18} color={'#fff'} strokeWidth={2}/>}
               onPress={() => {
                 // let's open new modal for new product        creation
-                setIsContactModelVisible(true);
+                // setIsContactModelVisible(true);
+                router.push('/orders/new')
               }}
               variant={'ghost'}/>
 
-      <NewContact visible={isContactModelVisible}
-                  onClose={() => {
-                    setIsContactModelVisible(false);
-                  }}/>
+      {/*<NewContact visible={isContactModelVisible}*/}
+      {/*            onClose={() => {*/}
+      {/*              setIsContactModelVisible(false);*/}
+      {/*            }}/>*/}
     </View>
   );
 }
