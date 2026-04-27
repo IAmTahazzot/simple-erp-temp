@@ -153,9 +153,8 @@ export const DropdownNavigation = ({ links, onChange }: DropdownNavigationProps)
                 {groupIndex > 0 && <View style={styles.separator} />}
 
                 {group.map((link) => {
-                  const isActive =
-                    pathname === link.href || pathname.startsWith(link.href + '/');
-
+                  const isActive = activeLink?.href === link.href;
+                  
                   return (
                     <NavItem
                       key={link.href}
