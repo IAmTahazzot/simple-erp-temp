@@ -7,7 +7,7 @@ import { NavigationBar } from "@/components/core/NavigationBar";
 import { Colors } from "@/constants/colors";
 import { initI18n } from "@/i18n";
 import { useAuthStore } from "@/store/authStore";
-import { StyleSheet, View, Text } from "react-native";
+import {StyleSheet, View, Text, ActivityIndicator} from "react-native";
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from "@expo-google-fonts/inter";
 import {useSync} from '@/hooks/use-sync';
 
@@ -50,12 +50,16 @@ export default function RootLayout() {
     };
   }, [checkAuth]);
 
-  if (!i18nReady || isLoading) {
-    return <Text>fucking loading......</Text>;
-  }
-  
-  if (isSyncing) {
-    return <Text>Synchronizing data...</Text>;
+  if (!i18nReady || isLoading || isSyncing) {
+    return <View style={{flex: 1}}>
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.dark.background, gap: 6}}>
+        <ActivityIndicator size={'large'} />
+        
+        <Text style={{color: '#fff', fontSize: 16, fontFamily: 'InterMedium'}}>
+          Getting things ready{isSyncing ? ' (syncing data...)' : ''}...
+        </Text>
+      </View>
+    </View>;
   }
 
   console.info('Online status: ', isOnline)

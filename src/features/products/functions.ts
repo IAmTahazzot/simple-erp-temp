@@ -134,13 +134,14 @@ export const createProduct = async (
         if (error) console.warn('Image push failed:', error)
       })
     }
-  }
 
-  await sync().then(() => {
-    console.log('Initial sync complete after product creation')
-  }).catch((e) => {
-    console.warn('Initial sync failed after product creation:', e)
-  })
+
+    await sync().then(() => {
+      console.log('Initial sync complete after product creation')
+    }).catch((e) => {
+      console.warn('Initial sync failed after product creation:', e)
+    })
+  }
 
   return product
 }
@@ -215,15 +216,15 @@ export const updateProduct = async (
 
     supabase.from('products').update({
       name: data.name,
-      price: data.price, 
+      price: data.price,
       cost: data.cost,
-      description: data.description, 
+      description: data.description,
       updated_at: now,
     })
-    .eq('id', prevProduct.id)
-    .then(({error}) => {
-      if (error) console.warn('Product update failed:', error)
-    })
+      .eq('id', prevProduct.id)
+      .then(({error}) => {
+        if (error) console.warn('Product update failed:', error)
+      })
 
     if (remoteUrl) {
       const images = await prevProduct.images.fetch()
@@ -237,14 +238,16 @@ export const updateProduct = async (
         })
       }
     }
+
+
+    await sync().then(() => {
+      console.log('Initial sync complete after product update')
+    }).catch((e) => {
+      console.warn('Initial sync failed after product update:', e)
+    })
   }
 
-  await sync().then(() => {
-    console.log('Initial sync complete after product update')
-  }).catch((e) => {
-    console.warn('Initial sync failed after product update:', e)
-  })
-  
+
 }
 
 
@@ -267,7 +270,8 @@ export const deleteProduct = async (product: Product, isOnline: boolean) => {
       .then(({error}) => {
         if (error) console.warn('Product delete failed:', error)
       })
+
+    await sync().catch((e) => console.warn('Sync failed after delete:', e))
   }
 
-  await sync().catch((e) => console.warn('Sync failed after delete:', e))
 }
