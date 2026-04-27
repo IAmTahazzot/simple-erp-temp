@@ -1,11 +1,17 @@
-import { Model } from '@nozbe/watermelondb'
+import { Model, Query, Relation } from '@nozbe/watermelondb'
 import { field, date, readonly, relation, children } from '@nozbe/watermelondb/decorators'
+import Transaction from './Transaction'
+import PurchaseOrderItem from './PurchaseOrderItem'
+import Supplier from './Supplier'
 
 export default class PurchaseOrder extends Model {
   static table = 'purchase_orders'
   static associations = {
     purchase_order_items: { type: 'has_many', foreignKey: 'purchase_order_id' },
-    payments: { type: 'has_many', foreignKey: 'purchase_order_id' }
+    payments: { type: 'has_many', foreignKey: 'purchase_order_id' },
+    suppliers: { type: 'belongs_to', key: 'supplier_id' },
+    users: { type: 'belongs_to', key: 'user_id' },
+    transactions: { type: 'has_many', foreignKey: 'purchase_order_id' },
   } as const
 
   @field('supplier_id') supplierId!: string
@@ -16,10 +22,10 @@ export default class PurchaseOrder extends Model {
   @field('discount_type') discountType?: string
   @field('discount_value') discountValue?: number
 
-  @relation('suppliers', 'supplier_id') supplier: any
   @relation('users', 'user_id') user: any
-  @children('purchase_order_items') items: any
-  @children('transactions') transactions: any
+  @relation('suppliers', 'supplier_id') supplier!: Relation<Supplier> 
+  @children('purchase_order_items') items!: Query<PurchaseOrderItem>
+  @children('transactions') transactions!: Query<Transaction>
 
   @readonly @date('created_at') createdAt!: Date
   @readonly @date('updated_at') updatedAt!: Date

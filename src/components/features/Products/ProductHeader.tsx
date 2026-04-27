@@ -29,7 +29,7 @@ const NAV_LINKS: NavLink[][] = [
     },
     {
       label: 'Purchase orders',
-      href: '/products/purchaseOrder',
+      href: '/products/purchaseorder',
       icon: <ClipboardList size={ICON_SIZE} color={ICON_COLOR} strokeWidth={1.6}/>
     },
   ]
@@ -38,6 +38,7 @@ const NAV_LINKS: NavLink[][] = [
 export function ProductHeader() {
   const [isProductModelVisible, setIsProductModelVisible] = useState(false);
   const [activeLink, setActiveLink] = useState<NavLink>(NAV_LINKS[0][0]);
+  const router = useRouter()
 
   const handleOnLinkChange = (link: NavLink) => {
     setActiveLink(link);
@@ -48,11 +49,16 @@ export function ProductHeader() {
       <DropdownNavigation links={NAV_LINKS} onChange={handleOnLinkChange}/>
       {/* ...rest of your header (back button, actions, etc.) */}
 
-      {['/products', '/products/purchaseOrder'].includes(activeLink.href) &&
+      {['/products', '/products/purchaseorder'].includes(activeLink.href) &&
         <Button size={'icon'}
                 rightIcon={<CirclePlus size={18} color={'#fff'} strokeWidth={2}/>}
                 onPress={() => {
-                  // let's open new modal for new product        creation
+                  // let's open new modal for new product creation
+                  if (activeLink.href === '/products/purchaseorder') {
+                    router.push('/products/purchaseorder/new')
+                    return 
+                  }
+                  
                   setIsProductModelVisible(true);
                 }}
                 variant={'ghost'}/>}
