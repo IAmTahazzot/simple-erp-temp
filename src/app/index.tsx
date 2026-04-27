@@ -1,80 +1,243 @@
-import {useEffect, useState, useCallback} from 'react';
-import {Pressable, StyleSheet, Text, View} from 'react-native';
-
-import {BaseLayout} from '@/components/core/BaseLayout';
-import {MainHeader} from '@/components/core/MainHeader';
-import {setAppLanguage} from '@/i18n';
-import {type AppLanguage} from '@/i18n/resources';
-import {useCommonTranslation} from '@/i18n/useTypedTranslation';
-import {useAuthStore} from '@/store/authStore';
-import {AlertDialog} from '@/components/ui/AlertDialog'
-import {Button} from '@/components/ui/Button'
-import React from 'react';
-import {Rocket} from 'lucide-react-native'
-import {ShadcnAlert} from '@/components/ui/ShadcnAlert';
-import {Drawer} from '@/components/ui/Drawer';
+// app/index.tsx
+import React, {useMemo, useState} from 'react'
+import {ScrollView, Text, View, StyleSheet} from 'react-native'
+import {BaseLayout} from '@/components/core/BaseLayout'
+import {MainHeader} from '@/components/core/MainHeader'
 import {Select} from '@/components/ui/Select'
-import {sync} from '@/database/sync';
+import {withObservables} from '@nozbe/watermelondb/react'
+import {Q} from '@nozbe/watermelondb'
+import {database} from '@/database'
+import Order from '@/database/models/Order'
+import Customer from '@/database/models/Customer'
+import Supplier from '@/database/models/Supplier'
+import {TrendingUp, ShoppingCart, Users, Building2} from 'lucide-react-native'
 
-export default function HomeScreen() {
-  const {t, i18n} = useCommonTranslation()
-  const logOut = useAuthStore(state => state.logout)
+// ─── Time period helpers ──────────────────────────────────────────────────────
+function getPeriodRange(period: string): {start: number; end: number} {
+  const now = new Date()
+  const start = new Date()
+  const end = now.getTime()
 
-  const activeLanguage = (i18n.language?.split('-')[0] ?? 'en') as AppLanguage;
+  switch (period) {
+    case 'today':
+      start.setHours(0, 0, 0, 0)
+      break
+    case 'this_week':
+      start.setDate(now.getDate() - now.getDay())
+      start.setHours(0, 0, 0, 0)
+      break
+    case 'last_week': {
+      const lastMon = new Date(now)
+      lastMon.setDate(now.getDate() - now.getDay() - 7)
+      lastMon.setHours(0, 0, 0, 0)
+      const lastSun = new Date(lastMon)
+      lastSun.setDate(lastMon.getDate() + 6)
+      lastSun.setHours(23, 59, 59, 999)
+      return {start: lastMon.getTime(), end: lastSun.getTime()}
+    }
+    case 'this_month':
+      start.setDate(1)
+      start.setHours(0, 0, 0, 0)
+      break
+    case 'last_month': {
+      const firstThisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+      const firstLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+      return {start: firstLastMonth.getTime(), end: firstThisMonth.getTime() - 1}
+    }
+    case 'this_year':
+      start.setMonth(0, 1)
+      start.setHours(0, 0, 0, 0)
+      break
+    case 'last_year': {
+      const firstThisYear = new Date(now.getFullYear(), 0, 1)
+      const firstLastYear = new Date(now.getFullYear() - 1, 0, 1)
+      return {start: firstLastYear.getTime(), end: firstThisYear.getTime() - 1}
+    }
+    case 'all_time':
+    default:
+      return {start: 0, end: end}
+  }
 
-  const switchLanguage = async (language: AppLanguage) => {
-    await setAppLanguage(language);
-  };
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [value, setValue] = useState<string | null>(null);
+  return {start: start.getTime(), end}
+}
+
+const PERIOD_GROUPS = [{
+  label: 'Time Period',
+  items: [
+    {label: 'Today',      value: 'today'},
+    {label: 'This Week',  value: 'this_week'},
+    {label: 'Last Week',  value: 'last_week'},
+    {label: 'This Month', value: 'this_month'},
+    {label: 'Last Month', value: 'last_month'},
+    {label: 'This Year',  value: 'this_year'},
+    {label: 'Last Year',  value: 'last_year'},
+    {label: 'All Time',   value: 'all_time'},
+  ]
+}]
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+
+function Dashboard({orders, customers, suppliers}: {
+  orders: Order[]
+  customers: Customer[]
+  suppliers: Supplier[]
+}) {
+  const [period, setPeriod] = useState('this_month')
+
+  const {revenue, orderCount, profit} = useMemo(() => {
+    const {start, end} = getPeriodRange(period)
+    const filtered = orders.filter((o) => o.orderDate.getTime() >= start && o.orderDate.getTime() <= end)
+    const revenue = filtered.reduce((sum, o) => sum + o.totalAmount, 0)
+    // Rough profit: revenue minus discounts (discountValue already factored into totalAmount)
+    // For true profit you'd need product cost — using 30% margin estimate as placeholder
+    const profit = revenue * 0.3
+    return {revenue, orderCount: filtered.length, profit}
+  }, [orders, period])
 
   return (
     <BaseLayout head={<MainHeader/>}>
-      <View>
-        <Pressable onPress={logOut} style={({pressed}) => {
-          return {
-            backgroundColor: pressed ? '#101010' : '#000000',
-            outlineWidth: pressed ? 1 : 0,
-            outlineColor: '#000',
-            outlineOffset: 3,
-            padding: 10,
-            borderRadius: 12,
-            margin: 10,
-          }
-        }}>
-          <Text style={{
-            fontSize: 16,
-            lineHeight: 22,
-            color: '#fff',
-          }}>Log Out</Text>
-        </Pressable>
-        <View style={{marginTop: 0, display: 'flex', gap: 5}}>
-          <Pressable onPress={() => switchLanguage(activeLanguage === 'en' ? 'bn' : 'en')} style={{
-            backgroundColor: '#000',
-            padding: 10,
-            borderRadius: 12,
-            margin: 10,
-            width: 100,
-          }}>
-            <Text style={{color: 'white'}}>
-              {activeLanguage === 'en' ? t('language.bangla') : t('language.english')}
+      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+
+        {/* ── Revenue Card ── */}
+        <View style={s.revenueCard}>
+          <View style={s.revenueTop}>
+            <Select
+              groups={PERIOD_GROUPS}
+              value={period}
+              onValueChange={setPeriod}
+              triggerStyle={s.selectTrigger}
+            />
+          </View>
+          <Text style={s.revenueLabel}>Total Revenue</Text>
+          <Text style={s.revenueAmount}>৳{revenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+        </View>
+
+        {/* ── 2x2 Stat Grid ── */}
+        <View style={s.grid}>
+
+          <View style={[s.statCard, {backgroundColor: '#1a1a2e'}]}>
+            <View style={[s.statIcon, {backgroundColor: '#ffffff18'}]}>
+              <ShoppingCart size={18} color="#fff"/>
+            </View>
+            <Text style={[s.statValue, {color: '#fff'}]}>{orderCount}</Text>
+            <Text style={[s.statLabel, {color: '#ffffff88'}]}>Orders</Text>
+          </View>
+
+          <View style={[s.statCard, {backgroundColor: '#064e3b'}]}>
+            <View style={[s.statIcon, {backgroundColor: '#ffffff18'}]}>
+              <TrendingUp size={18} color="#fff"/>
+            </View>
+            <Text style={[s.statValue, {color: '#fff'}]}>
+              ৳{profit >= 1000
+              ? `${(profit / 1000).toFixed(1)}k`
+              : profit.toFixed(0)}
             </Text>
-          </Pressable>
-        </View>
+            <Text style={[s.statLabel, {color: '#ffffff88'}]}>Est. Profit</Text>
+          </View>
 
-        <View style={{margin: 10, display: 'flex', gap: 5}}>
+          <View style={[s.statCard, {backgroundColor: '#fff', borderWidth: 1, borderColor: '#f0f0f0'}]}>
+            <View style={[s.statIcon, {backgroundColor: '#f3f4f6'}]}>
+              <Users size={18} color="#111827"/>
+            </View>
+            <Text style={[s.statValue, {color: '#111827'}]}>{customers.length}</Text>
+            <Text style={[s.statLabel, {color: '#6b7280'}]}>Customers</Text>
+          </View>
 
-          <Button onPress={async () => {
-            console.info('sync started')
-            await sync()
-              .catch((e) => {
-                console.log('Sync failed:', e)
-              })
-              .finally(() => console.log('Sync complete'))
-          }}
-                  title={'Sync'}/>
+          <View style={[s.statCard, {backgroundColor: '#fff', borderWidth: 1, borderColor: '#f0f0f0'}]}>
+            <View style={[s.statIcon, {backgroundColor: '#f3f4f6'}]}>
+              <Building2 size={18} color="#111827"/>
+            </View>
+            <Text style={[s.statValue, {color: '#111827'}]}>{suppliers.length}</Text>
+            <Text style={[s.statLabel, {color: '#6b7280'}]}>Suppliers</Text>
+          </View>
+
         </View>
-      </View>
+      </ScrollView>
     </BaseLayout>
   )
 }
+
+// ─── withObservables ──────────────────────────────────────────────────────────
+
+export default withObservables([], () => ({
+  orders: database.collections.get<Order>('orders')
+    .query(Q.where('server_deleted_at', Q.eq(null))).observe(),
+  customers: database.collections.get<Customer>('customers')
+    .query(Q.where('server_deleted_at', Q.eq(null))).observe(),
+  suppliers: database.collections.get<Supplier>('suppliers')
+    .query(Q.where('server_deleted_at', Q.eq(null))).observe(),
+}))(Dashboard)
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const s = StyleSheet.create({
+  scroll: {
+    padding: 16,
+    gap: 16,
+  },
+  revenueCard: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: 'rgb(0 0 0 / 0.51)',
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 12,
+    gap: 6,
+  },
+  revenueTop: {
+    marginBottom: 8,
+    alignSelf: 'flex-start',
+    minWidth: 160,
+  },
+  selectTrigger: {
+    borderColor: '#e5e7eb',
+    backgroundColor: '#f9fafb',
+    height: 36,
+  },
+  revenueLabel: {
+    fontSize: 13,
+    color: '#6b7280',
+    fontFamily: 'InterMedium',
+    marginTop: 4,
+  },
+  revenueAmount: {
+    fontSize: 42,
+    fontFamily: 'InterBold',
+    color: '#111827',
+    letterSpacing: -1,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  statCard: {
+    flex: 1,
+    minWidth: '45%',
+    borderRadius: 16,
+    padding: 16,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  statIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 26,
+    fontFamily: 'InterBold',
+    letterSpacing: -0.5,
+  },
+  statLabel: {
+    fontSize: 13,
+    fontFamily: 'InterMedium',
+  },
+})

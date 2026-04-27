@@ -20,6 +20,7 @@ interface ButtonProps {
   textStyle?: StyleProp<TextStyle>;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  hitSlop?: number | { top?: number; bottom?: number; left?: number; right?: number };
 }
 
 export const Button = ({
@@ -33,6 +34,7 @@ export const Button = ({
   textStyle,
   leftIcon,
   rightIcon,
+  hitSlop = 10
 }: ButtonProps) => {
   const getVariantStyle = (): ViewStyle => {
     switch (variant) {
@@ -73,7 +75,7 @@ export const Button = ({
       activeOpacity={0.8}
       onPress={onPress}
       disabled={disabled || loading}
-      hitSlop={15}
+      hitSlop={hitSlop}
       style={[
         styles.base,
         getVariantStyle(),

@@ -62,7 +62,6 @@ export default function RootLayout() {
     </View>;
   }
 
-  console.info('Online status: ', isOnline)
   return (
     <>
       {isLoggedIn ? (

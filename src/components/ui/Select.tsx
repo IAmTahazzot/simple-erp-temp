@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
   trigger: {
     height: 40,
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 50,
     paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
