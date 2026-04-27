@@ -18,6 +18,8 @@ import React, { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import {useCommonTranslation} from '@/i18n/useTypedTranslation';
 
+
+
 // ─── Time period helpers ──────────────────────────────────────────────────────
 function getPeriodRange(period: string): { start: number; end: number } {
   const now = new Date();
@@ -73,7 +75,6 @@ function getPeriodRange(period: string): { start: number; end: number } {
   return { start: start.getTime(), end };
 }
 
-
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 function DashboardStats({
@@ -85,7 +86,7 @@ function DashboardStats({
   customers: Customer[];
   suppliers: Supplier[];
 }) {
-  const [period, setPeriod] = useState("this_month");
+  const [period, setPeriod] = useState("today");
   const { t } = useCommonTranslation()
 
   const { revenue, orderCount, profit } = useMemo(() => {
@@ -116,6 +117,18 @@ function DashboardStats({
     },
   ];
 
+  const [calendarVisible, setCalendarVisible] = useState(false)
+  const [customRange, setCustomRange] = useState<{start: number; end: number} | null>(null)
+
+// Replace the useMemo range derivation:
+  const {start, end} = customRange ?? getPeriodRange(period)
+
+// Reset custom range when period changes:
+  const handlePeriodChange = (val: string) => {
+    setPeriod(val)
+    setCustomRange(null)
+  }
+  
   return (
     <ScrollView
       contentContainerStyle={s.scroll}
@@ -130,6 +143,7 @@ function DashboardStats({
             onValueChange={setPeriod}
             triggerStyle={s.selectTrigger}
           />
+
         </View>
         <Text style={s.revenueLabel}>{t('totalRevenue')}</Text>
         <Text style={s.revenueAmount}>

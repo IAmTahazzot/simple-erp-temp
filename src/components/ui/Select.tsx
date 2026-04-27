@@ -132,6 +132,7 @@ export function Select({
                          disabled = false,
                          triggerStyle,
                          colorScheme = 'light',
+                         
                        }: SelectProps) {
   const theme = themes[colorScheme];
   const [open, setOpen] = useState(false);

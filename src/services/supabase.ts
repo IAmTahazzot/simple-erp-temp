@@ -18,7 +18,7 @@ export const supabase = createClient(
 // Wrap test code in an async function to avoid top-level await errors in Metro/Hermes
 const secureAuth = async () => {
   const res = await supabase.auth.signInWithPassword({
-    email: 'lyra@gmail.com',
+    email: 'nasimautopoint.ltd@gmail.com',
     password: '123',
   });
 

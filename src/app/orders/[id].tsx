@@ -101,6 +101,24 @@ function PayModal({visible, due, onClose, onPay}: {
 }
 
 // ─── Order Detail ─────────────────────────────────────────────────────────────
+function OrderDetailItem({item}: { item: OrderItem }) {
+  // Use HOC to fetch the resolved product observable, so changes are tracked efficiently
+  return <EnhancedOrderDetailItem item={item}/>
+}
+
+const EnhancedOrderDetailItem = withObservables(['item'], ({item}: { item: OrderItem }) => ({
+  item: item.observe(),
+  product: item.product.observe(), 
+}))(({item, product}: { item: OrderItem, product: any }) => (
+  <View style={s.itemRow}>
+    <View style={{flex: 1}}>
+      <Text style={s.itemName}>{product?.name ?? item.productId}</Text>
+      <Text style={s.itemSub}>Qty {item.quantity} × ৳{item.unitPrice.toFixed(2)}</Text>
+    </View>
+    <Text style={s.itemTotal}>৳{(item.quantity * item.unitPrice).toFixed(2)}</Text>
+  </View>
+))
+
 function OrderDetail({order, customer, items, transactions}: {
   order: Order
   customer: any
@@ -160,13 +178,7 @@ function OrderDetail({order, customer, items, transactions}: {
         <View style={s.card}>
           <Text style={s.cardTitle}>Items</Text>
           {items.map((item) => (
-            <View key={item.id} style={s.itemRow}>
-              <View style={{flex: 1}}>
-                <Text style={s.itemName}>{item.productId}</Text>
-                <Text style={s.itemSub}>Qty {item.quantity} × ৳{item.unitPrice.toFixed(2)}</Text>
-              </View>
-              <Text style={s.itemTotal}>৳{(item.quantity * item.unitPrice).toFixed(2)}</Text>
-            </View>
+             <OrderDetailItem key={item.id} item={item} />
           ))}
         </View>
 
@@ -235,7 +247,7 @@ function OrderDetail({order, customer, items, transactions}: {
 const EnhancedOrderDetail = withObservables(['order'], ({order}: { order: Order }) => ({
   order: order.observe(),
   customer: order.customer.observe(),
-  items: order.orderItems.observe(),
+  items: order.orderItems.observeWithColumns(['product_id', 'quantity', 'unit_price']),
   transactions: order.transactions.observe(),
 }))(OrderDetail)
 

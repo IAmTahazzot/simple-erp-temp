@@ -8,6 +8,7 @@ import {UpdateProduct} from '@/components/features/Products/UpdateProduct';
 import ProductImages from '@/database/models/Images';
 import Inventory from '@/database/models/Inventory';
 import {Image as ImageIcon, Search as SearchIcon} from 'lucide-react-native'
+import {useOnline} from '@/hooks/use-online';
 
 // ─── Fuzzy score ─────────────────────────────────────────────────────────────
 // Returns 0 (no match) to 100 (exact). Results below MIN_SCORE are hidden.
@@ -39,7 +40,23 @@ const ProductItem = ({item, images, inventory, onPress}: {
 }) => {
   const stock = inventory[0]?.quantity ?? 0
   const isLowStock = stock < (inventory[0]?.lowStockThreshold || 1)
+  const { isOnline } = useOnline()
 
+  let imageComponent = null
+  
+  if (isOnline && images[0]?.imageUrl) {
+    imageComponent = <Image source={{uri: images[0].imageUrl}} style={{width: 50, height: 50, borderRadius: 4}}/>
+  } else {
+    imageComponent = (
+      <View style={{
+        width: 50, height: 50, borderRadius: 4,
+        backgroundColor: '#efefef', alignItems: 'center', justifyContent: 'center'
+      }}>
+        <ImageIcon size={24} color="#a0a0a0"/>
+      </View>
+    )
+  }
+  
   return (
     <Pressable
       style={({pressed}) => [
@@ -48,16 +65,7 @@ const ProductItem = ({item, images, inventory, onPress}: {
       ]}
       onPress={onPress}>
       <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
-        {images[0]?.imageUrl ? (
-          <Image source={{uri: images[0].imageUrl}} style={{width: 50, height: 50, borderRadius: 4}}/>
-        ) : (
-          <View style={{
-            width: 50, height: 50, borderRadius: 4,
-            backgroundColor: '#efefef', alignItems: 'center', justifyContent: 'center'
-          }}>
-            <ImageIcon size={24} color="#a0a0a0"/>
-          </View>
-        )}
+        {imageComponent}
         <View style={{gap: 3}}>
           <Text style={{fontSize: 16, fontFamily: 'InterBold'}}>{item.name}</Text>
           <Text style={{color: isLowStock ? '#d9534f' : '#5cb85c', fontFamily: 'InterMedium'}}>
