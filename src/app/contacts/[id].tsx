@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import {View, Text, ScrollView, StyleSheet, Pressable, ToastAndroid} from 'react-native'
+import {View, Text, ScrollView, StyleSheet, Pressable, ToastAndroid, Linking} from 'react-native'
 import {useLocalSearchParams, useRouter} from 'expo-router'
 import {withObservables} from '@nozbe/watermelondb/react'
 import {database} from '@/database'
@@ -12,6 +12,7 @@ import {AlertDialog} from '@/components/ui/AlertDialog';
 import {deleteProduct} from '@/features/products/functions';
 import {deleteContact} from '@/features/contacts/functions';
 import {useOnline} from '@/hooks/use-online';
+import {useCommonTranslation} from '@/i18n/useTypedTranslation';
 
 // ─── Shared ───────────────────────────────────────────────────────────────────
 
@@ -32,6 +33,7 @@ function CustomerDetails({contact}: { contact: Customer }) {
   const [editVisible, setEditVisible] = useState(false)
   const [shouldDelete, setShouldDelete] = useState(false);
   const {isOnline} = useOnline()
+  const {t} = useCommonTranslation()
 
   return (
     <View style={{flex: 1, backgroundColor: '#fff'}}>
@@ -56,6 +58,15 @@ function CustomerDetails({contact}: { contact: Customer }) {
           </View>
           <Text style={styles.customerName}>{contact.name}</Text>
           <Text style={styles.customerLabel}>Customer</Text>
+          <Button size={'icon'} rightIcon={<Phone size={25} color={'white'}/>} style={{
+            backgroundColor: '#00a66c2',
+            alignSelf: 'center',
+            marginTop: 10,
+          }}
+                  onPress={() => {
+                    Linking.openURL(`tel:${contact.phone}`)
+                  }}
+          />
         </View>
 
         {/* Contact info card */}
@@ -67,7 +78,7 @@ function CustomerDetails({contact}: { contact: Customer }) {
           {!contact.phone && !contact.email && !contact.address && (
             <Text style={styles.emptyNote}>No contact details added yet.</Text>
           )}
-          <Button title={'Delete'}
+          <Button title={t('delete')}
                   variant={'destructive'}
                   style={{marginTop: 20, marginLeft: 'auto'}}
                   onPress={() => {
@@ -116,6 +127,7 @@ function SupplierDetails({contact}: { contact: Supplier }) {
   const [editVisible, setEditVisible] = useState(false)
   const [shouldDelete, setShouldDelete] = useState(false);
   const {isOnline} = useOnline()
+  const {t} = useCommonTranslation()
 
   return (
     <View style={{flex: 1, backgroundColor: '#f9fafb'}}>
@@ -141,6 +153,15 @@ function SupplierDetails({contact}: { contact: Supplier }) {
           {contact.contactName && (
             <Text style={styles.supplierContact}>via {contact.contactName}</Text>
           )}
+          <Button size={'icon'} rightIcon={<Phone size={25} color={'#000'} />} style={{
+            backgroundColor: '#fff',
+            alignSelf: 'center',
+            marginTop: 10,
+          }}
+                  onPress={() => {
+                    Linking.openURL(`tel:${contact.phone}`)
+                  }}
+          />
         </View>
 
         {/* Details */}
@@ -156,7 +177,7 @@ function SupplierDetails({contact}: { contact: Supplier }) {
             <Text style={styles.emptyNote}>No details added yet.</Text>
           )}
 
-          <Button title={'Delete'}
+          <Button title={t("delete")}
                   variant={'destructive'}
                   style={{marginTop: 20, marginLeft: 'auto'}}
                   onPress={() => {
@@ -228,7 +249,14 @@ const styles = StyleSheet.create({
     borderRadius: 12, padding: 16,
     shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
-  cardTitle: {fontSize: 13, fontFamily: 'InterMedium', color: '#9ca3af', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5},
+  cardTitle: {
+    fontSize: 13,
+    fontFamily: 'InterMedium',
+    color: '#9ca3af',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5
+  },
   emptyNote: {color: '#9ca3af', fontFamily: 'InterRegular', fontSize: 14},
 
   // Customer
@@ -236,7 +264,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#111827', paddingHorizontal: 16, paddingTop: 52, paddingBottom: 12,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
-  editBtn: {flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#ffffff22', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20},
+  editBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#ffffff22',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20
+  },
   editBtnText: {color: '#fff', fontSize: 13, fontFamily: 'InterMedium'},
   customerHero: {backgroundColor: '#111827', alignItems: 'center', paddingBottom: 32, paddingTop: 8},
   customerAvatar: {
@@ -254,7 +290,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
   },
   supplierHeaderTitle: {fontSize: 16, fontFamily: 'InterBold', color: '#111'},
-  supplierEditBtn: {flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f3f4f6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20},
+  supplierEditBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#f3f4f6',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20
+  },
   supplierEditBtnText: {color: '#111', fontSize: 13, fontFamily: 'InterMedium'},
   supplierHero: {
     margin: 16, backgroundColor: '#fff', borderRadius: 12, padding: 24,

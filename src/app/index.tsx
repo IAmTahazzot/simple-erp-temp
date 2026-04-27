@@ -16,6 +16,7 @@ import {
 } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import {useCommonTranslation} from '@/i18n/useTypedTranslation';
 
 // ─── Time period helpers ──────────────────────────────────────────────────────
 function getPeriodRange(period: string): { start: number; end: number } {
@@ -72,21 +73,6 @@ function getPeriodRange(period: string): { start: number; end: number } {
   return { start: start.getTime(), end };
 }
 
-const PERIOD_GROUPS = [
-  {
-    label: "Time Period",
-    items: [
-      { label: "Today", value: "today" },
-      { label: "This Week", value: "this_week" },
-      { label: "Last Week", value: "last_week" },
-      { label: "This Month", value: "this_month" },
-      { label: "Last Month", value: "last_month" },
-      { label: "This Year", value: "this_year" },
-      { label: "Last Year", value: "last_year" },
-      { label: "All Time", value: "all_time" },
-    ],
-  },
-];
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
@@ -100,6 +86,7 @@ function DashboardStats({
   suppliers: Supplier[];
 }) {
   const [period, setPeriod] = useState("this_month");
+  const { t } = useCommonTranslation()
 
   const { revenue, orderCount, profit } = useMemo(() => {
     const { start, end } = getPeriodRange(period);
@@ -112,6 +99,22 @@ function DashboardStats({
     const profit = revenue * 0.3;
     return { revenue, orderCount: filtered.length, profit };
   }, [orders, period]);
+  
+  const PERIOD_GROUPS = [
+    {
+      label: "Time Period",
+      items: [
+        { label: t('select.today'), value: "today" },
+        { label: t('select.this_week'), value: "this_week" },
+        { label: t("select.last_week"), value: "last_week" },
+        { label: t('select.this_month'), value: "this_month" },
+        { label: t('select.last_month'), value: "last_month" },
+        { label: t('select.this_year'), value: "this_year" },
+        { label: t("select.last_year"), value: "last_year" },
+        { label: t('select.all_time'), value: "all_time" },
+      ],
+    },
+  ];
 
   return (
     <ScrollView
@@ -128,7 +131,7 @@ function DashboardStats({
             triggerStyle={s.selectTrigger}
           />
         </View>
-        <Text style={s.revenueLabel}>Total Revenue</Text>
+        <Text style={s.revenueLabel}>{t('totalRevenue')}</Text>
         <Text style={s.revenueAmount}>
           ৳
           {revenue.toLocaleString("en-US", {
@@ -145,7 +148,7 @@ function DashboardStats({
             <ShoppingCart size={18} color="#fff" />
           </View>
           <Text style={[s.statValue, { color: "#fff" }]}>{orderCount}</Text>
-          <Text style={[s.statLabel, { color: "#ffffff88" }]}>Orders</Text>
+          <Text style={[s.statLabel, { color: "#ffffff88" }]}>{t('orders')}</Text>
         </View>
 
         <View style={[s.statCard, { backgroundColor: "#064e3b" }]}>
@@ -158,7 +161,7 @@ function DashboardStats({
               ? `${(profit / 1000).toFixed(1)}k`
               : profit.toFixed(0)}
           </Text>
-          <Text style={[s.statLabel, { color: "#ffffff88" }]}>Est. Profit</Text>
+          <Text style={[s.statLabel, { color: "#ffffff88" }]}>{t('profit')}</Text>
         </View>
 
         <View
@@ -177,7 +180,7 @@ function DashboardStats({
           <Text style={[s.statValue, { color: "#111827" }]}>
             {customers.length}
           </Text>
-          <Text style={[s.statLabel, { color: "#6b7280" }]}>Customers</Text>
+          <Text style={[s.statLabel, { color: "#6b7280" }]}>{t('customers')}</Text>
         </View>
 
         <View
@@ -196,7 +199,7 @@ function DashboardStats({
           <Text style={[s.statValue, { color: "#111827" }]}>
             {suppliers.length}
           </Text>
-          <Text style={[s.statLabel, { color: "#6b7280" }]}>Suppliers</Text>
+          <Text style={[s.statLabel, { color: "#6b7280" }]}>{t('suppliers')}</Text>
         </View>
       </View>
     </ScrollView>

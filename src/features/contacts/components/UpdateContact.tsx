@@ -7,6 +7,7 @@ import Customer from '@/database/models/Customer'
 import Supplier from '@/database/models/Supplier'
 import {updateCustomer, updateSupplier} from '@/features/contacts/functions'
 import {useOnline} from '@/hooks/use-online'
+import {useCommonTranslation} from '@/i18n/useTypedTranslation';
 
 interface UpdateContactProps {
   visible: boolean
@@ -22,6 +23,7 @@ export function UpdateContact({visible, onClose, contactType, contact}: UpdateCo
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
+  const {t} = useCommonTranslation()
 
   useEffect(() => {
     if (!visible || !contact) return
@@ -57,7 +59,7 @@ export function UpdateContact({visible, onClose, contactType, contact}: UpdateCo
           <TextInput
             style={styles.nameInput}
             value={name}
-            placeholder={contactType === 'customer' ? 'Customer Name' : 'Business Name'}
+            placeholder={contactType === 'customer' ? t('contact.name') : t('contact.businessOrgName')}
             placeholderTextColor={Colors.light.placeholder}
             onChangeText={setName}
           />
@@ -71,9 +73,9 @@ export function UpdateContact({visible, onClose, contactType, contact}: UpdateCo
             />
           )}
 
-          <MegaInput label={'Phone'} theme={'WATER'} value={phone} onChangeText={setPhone} inputMode={'tel'}/>
-          <MegaInput label={'Email'} theme={'WATER'} value={email} onChangeText={setEmail} inputMode={'email'}/>
-          <MegaInput label={'Address'} theme={'WATER'} value={address} onChangeText={setAddress} autoGrow={true}/>
+          <MegaInput label={t('contact.phone')} theme={'WATER'} value={phone} onChangeText={setPhone} inputMode={'tel'}/>
+          <MegaInput label={t('contact.email')} theme={'WATER'} value={email} onChangeText={setEmail} inputMode={'email'}/>
+          <MegaInput label={t('contact.address')} theme={'WATER'} value={address} onChangeText={setAddress} autoGrow={true}/>
 
         </View>
       </View>

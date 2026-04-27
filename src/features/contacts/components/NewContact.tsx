@@ -59,8 +59,8 @@ export function NewContact({visible, onClose}: NewContactProps) {
             groups={[{
               label: 'Contact Type',
               items: [
-                {label: 'Customer', value: 'customer'},
-                {label: 'Supplier', value: 'supplier'},
+                {label: t('customers'), value: 'customer'},
+                {label: t('suppliers'), value: 'supplier'},
               ]
             }]}
             value={contactType}
@@ -70,7 +70,7 @@ export function NewContact({visible, onClose}: NewContactProps) {
           <TextInput
             style={styles.nameInput}
             value={name}
-            placeholder={contactType === 'customer' ? 'Customer Name' : 'Business Name'}
+            placeholder={contactType === 'customer' ? t("customers") : t("contact.businessOrgName")}
             placeholderTextColor={Colors.light.placeholder}
             onChangeText={setName}
           />
@@ -78,7 +78,7 @@ export function NewContact({visible, onClose}: NewContactProps) {
           {/* Supplier-only: contact person name */}
           {contactType === 'supplier' && (
             <MegaInput
-              label={'Contact Person'}
+              label={t("suppliers")}
               theme={'WATER'}
               value={contactName}
               onChangeText={setContactName}
@@ -86,7 +86,7 @@ export function NewContact({visible, onClose}: NewContactProps) {
           )}
 
           <MegaInput
-            label={'Phone'}
+            label={t('contact.phone')}
             theme={'WATER'}
             value={phone}
             onChangeText={setPhone}
@@ -94,7 +94,7 @@ export function NewContact({visible, onClose}: NewContactProps) {
           />
 
           <MegaInput
-            label={'Email'}
+            label={t('contact.email')}
             theme={'WATER'}
             value={email}
             onChangeText={setEmail}
@@ -102,7 +102,7 @@ export function NewContact({visible, onClose}: NewContactProps) {
           />
 
           <MegaInput
-            label={'Address'}
+            label={t('contact.address')}
             theme={'WATER'}
             value={address}
             onChangeText={setAddress}

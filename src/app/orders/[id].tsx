@@ -21,6 +21,7 @@ import TransactionModel from '@/database/models/Transaction'
 import {ArrowLeft, CheckCircle, Clock, AlertCircle} from 'lucide-react-native'
 import {addPayment} from '@/features/orders/functions'
 import {useOnline} from '@/hooks/use-online'
+import {useCommonTranslation} from '@/i18n/useTypedTranslation';
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
@@ -109,6 +110,7 @@ function OrderDetail({order, customer, items, transactions}: {
   const router = useRouter()
   const {isOnline} = useOnline()
   const [payVisible, setPayVisible] = useState(false)
+  const {t} = useCommonTranslation()
 
   const totalPaid = transactions
     .filter((t) => t.type === 'payment')
@@ -127,7 +129,7 @@ function OrderDetail({order, customer, items, transactions}: {
         <Pressable onPress={() => router.back()} style={{padding: 4}}>
           <ArrowLeft size={22} color="#111"/>
         </Pressable>
-        <Text style={s.headerTitle}>Order</Text>
+        <Text style={s.headerTitle}>{t('ordersPage.order')}</Text>
         <View style={{width: 30}}/>
       </View>
 
@@ -172,15 +174,15 @@ function OrderDetail({order, customer, items, transactions}: {
         <View style={s.card}>
           <Text style={s.cardTitle}>Payment</Text>
           <View style={s.summaryRow}>
-            <Text style={s.summaryKey}>Order total</Text>
+            <Text style={s.summaryKey}>{t('ordersPage.total')}</Text>
             <Text style={s.summaryVal}>৳{order.totalAmount.toFixed(2)}</Text>
           </View>
           <View style={s.summaryRow}>
-            <Text style={s.summaryKey}>Paid</Text>
+            <Text style={s.summaryKey}>{t('ordersPage.paid')}</Text>
             <Text style={[s.summaryVal, {color: '#065f46'}]}>৳{totalPaid.toFixed(2)}</Text>
           </View>
           <View style={[s.summaryRow, {borderTopWidth: 1, borderTopColor: '#f0f0f0', paddingTop: 10, marginTop: 4}]}>
-            <Text style={[s.summaryKey, {fontFamily: 'InterBold'}]}>Due</Text>
+            <Text style={[s.summaryKey, {fontFamily: 'InterBold'}]}>{t('ordersPage.due')}</Text>
             <Text style={[s.summaryVal, {fontFamily: 'InterBold', color: due > 0 ? '#92400e' : '#065f46'}]}>
               ৳{due.toFixed(2)}
             </Text>

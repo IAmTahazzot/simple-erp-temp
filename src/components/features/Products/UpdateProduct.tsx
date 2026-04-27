@@ -106,8 +106,8 @@ export function UpdateProduct({visible, onClose, prevProduct}: UpdateProductProp
       visible={visible}
       onClose={onClose}
       onSuccess={handleUpdate}
-      loadingText={'Updating product...'}
-      title={'Update Product'}>
+      loadingText={t('product.update')}
+      title={t('product.update')}>
       <View style={styles.container}>
         <View style={{gap: 12}}>
 
@@ -172,7 +172,7 @@ export function UpdateProduct({visible, onClose, prevProduct}: UpdateProductProp
           />
 
 
-          <MegaInput label={'Low stock threshold'}
+          <MegaInput label={t('product.stock_warning')}
                       value={stockWarning.toString()}
                      onChangeText={text => setStockWarning(parseInt(text) || 0)}
                      theme={'WATER'}
@@ -189,7 +189,7 @@ export function UpdateProduct({visible, onClose, prevProduct}: UpdateProductProp
             autoGrow={true}
           />
 
-          <Button title={'Delete'}
+          <Button title={t("delete")}
                   variant={'destructive'}
                   style={{width: '100%'}}
                   onPress={() => {

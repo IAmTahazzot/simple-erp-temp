@@ -157,7 +157,7 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
                        fontSize: 32,
                      }}/>
           
-          <MegaInput label={'Low stock threshold'}
+          <MegaInput label={t("product.stock_warning")}
                      onChangeText={text => setStockWarning(parseInt(text) || 0)}
                      theme={'WATER'}
                      inputMode={'numeric'}

@@ -15,6 +15,7 @@ import {X, Check, Plus, Minus, Search as SearchIcon, UserPlus, ShoppingBag} from
 import {createOrder, OrderLine} from '@/features/orders/functions'
 import {useOnline} from '@/hooks/use-online'
 import {useAuthStore} from '@/store/authStore';
+import {useCommonTranslation} from '@/i18n/useTypedTranslation';
 
 // ─── Fuzzy search ─────────────────────────────────────────────────────────────
 function fuzzyScore(name: string, query: string): number {
@@ -104,6 +105,7 @@ function NewOrderScreen({customers, products}: { customers: Customer[]; products
   const [showProductPicker, setShowProductPicker] = useState(false)
   const [saving, setSaving] = useState(false)
   const { user, isLoading } = useAuthStore()
+  const { t } = useCommonTranslation()
   
   // ── Calculations
   const subtotal = cart.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0)
@@ -170,7 +172,7 @@ function NewOrderScreen({customers, products}: { customers: Customer[]; products
             <Pressable onPress={() => router.back()} style={s.headerBtn}>
               <X size={20} color="#111"/>
             </Pressable>
-            <Text style={s.headerTitle}>Create order</Text>
+            <Text style={s.headerTitle}>{t('ordersPage.createOrder')}</Text>
             <Pressable onPress={handleSave} style={s.headerBtn} disabled={saving}>
               {saving ? <ActivityIndicator size={'small'}/> : <Check size={20} color="#111"/>}
             </Pressable>
@@ -180,7 +182,7 @@ function NewOrderScreen({customers, products}: { customers: Customer[]; products
 
             {/* ── Customer */}
             <View style={s.section}>
-              <Text style={s.sectionTitle}>Customer</Text>
+              <Text style={s.sectionTitle}>{t('customers')}</Text>
               {customer ? (
                 <Pressable style={s.selectedRow} onPress={() => setShowCustomerPicker(true)}>
                   <View style={s.avatar}>
@@ -200,7 +202,7 @@ function NewOrderScreen({customers, products}: { customers: Customer[]; products
 
             {/* ── Products */}
             <View style={s.section}>
-              <Text style={s.sectionTitle}>Products</Text>
+              <Text style={s.sectionTitle}>{t('products')}</Text>
 
               {cart.map((item) => (
                 <View key={item.productId} style={s.cartRow}>
@@ -236,14 +238,14 @@ function NewOrderScreen({customers, products}: { customers: Customer[]; products
               </View>
 
               <View style={s.payLine}>
-                <Text style={s.payKey}>Subtotal</Text>
+                <Text style={s.payKey}>{t("ordersPage.subtotal")}</Text>
                 <Text style={s.payVal}>৳{subtotal.toFixed(2)}</Text>
               </View>
 
               {/* Discount row */}
               <View style={s.payLine}>
                 <View style={{flex: 1}}>
-                  <Text style={s.payKey}>Discount</Text>
+                  <Text style={s.payKey}>{t('ordersPage.discount')}</Text>
                   <View style={{flexDirection: 'row', gap: 8, marginTop: 6}}>
                     <Pressable
                       onPress={() => setDiscountType('flat')}
@@ -269,7 +271,7 @@ function NewOrderScreen({customers, products}: { customers: Customer[]; products
               </View>
 
               <View style={[s.payLine, {borderTopWidth: 1, borderTopColor: '#f0f0f0', paddingTop: 12, marginTop: 4}]}>
-                <Text style={[s.payKey, {fontFamily: 'InterBold', fontSize: 16}]}>Total</Text>
+                <Text style={[s.payKey, {fontFamily: 'InterBold', fontSize: 16}]}>{t("ordersPage.total")}</Text>
                 <Text style={[s.payVal, {fontFamily: 'InterBold', fontSize: 16}]}>৳{total.toFixed(2)}</Text>
               </View>
             </View>
