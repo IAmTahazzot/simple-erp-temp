@@ -1,12 +1,19 @@
-import { synchronize } from '@nozbe/watermelondb/sync'
-import { database } from '@/database'
-import { supabase } from '@/services/supabase'
+import {synchronize} from '@nozbe/watermelondb/sync'
+import {database} from '@/database'
+import {supabase} from '@/services/supabase'
 import {ToastAndroid} from 'react-native';
 
 const TABLES = [
-  'users', 'customers', 'suppliers', 'products', 'product_images',
-  'inventory', 'orders', 'order_items', 'purchase_orders',
-  'purchase_order_items', 'transactions',
+  'users',
+  'customers',
+  'suppliers',
+  'products',
+  'inventory',
+  'orders',
+  'order_items',
+  'purchase_orders',
+  'purchase_order_items',
+  'transactions',
 ]
 
 let isSyncing = false
@@ -20,16 +27,16 @@ export const sync = async () => {
       database,
       sendCreatedAsUpdated: true,
 
-      pullChanges: async ({ lastPulledAt }) => {
+      pullChanges: async ({lastPulledAt}) => {
         // ✅ bigint columns — keep as ms number, no ISO conversion
         const since = lastPulledAt ?? 0
-        const { data: serverTime } = await supabase.rpc('get_server_time_ms')
-        
+        const {data: serverTime} = await supabase.rpc('get_server_time_ms')
+
         const changes: Record<string, any> = {}
 
         await Promise.all(
           TABLES.map(async (table) => {
-            const { data, error } = await supabase
+            const {data, error} = await supabase
               .from(table)
               .select('*')
               .gt('updated_at', since)
@@ -48,10 +55,10 @@ export const sync = async () => {
           })
         )
 
-        return { changes, timestamp: serverTime ?? Date.now() }
+        return {changes, timestamp: serverTime ?? Date.now()}
       },
 
-      pushChanges: async ({ changes }) => {
+      pushChanges: async ({changes}) => {
         for (const table of TABLES) {
           const tableChanges = (changes as any)[table]
           if (!tableChanges) continue
@@ -62,7 +69,7 @@ export const sync = async () => {
           ]
 
           if (toUpsert.length > 0) {
-            const { error } = await supabase
+            const {error} = await supabase
               .from(table)
               .upsert(toUpsert.map(mapToSupabase))
             if (error) throw error
@@ -70,9 +77,9 @@ export const sync = async () => {
 
           if (tableChanges.deleted?.length > 0) {
             const now = Date.now() // ✅ bigint column expects number
-            const { error } = await supabase
+            const {error} = await supabase
               .from(table)
-              .update({ server_deleted_at: now, updated_at: now })
+              .update({server_deleted_at: now, updated_at: now})
               .in('id', tableChanges.deleted)
             if (error) throw error
           }
@@ -103,7 +110,7 @@ const mapFromSupabase = (r: any) => ({
 
 // WatermelonDB → Supabase: numbers go in as numbers, bigint is fine
 const mapToSupabase = (r: any) => {
-  const { _status, _changed, ...rest } = r
+  const {_status, _changed, ...rest} = r
   const now = Date.now()
   return {
     ...rest,
