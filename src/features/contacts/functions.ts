@@ -178,8 +178,6 @@ export const deleteContact = async (
       .then(({error}) => {
         if (error) console.warn(`${table} delete failed:`, error)
       })
-
-    await sync().catch((e) => console.warn('Sync failed after delete:', e))
   }
 
 }

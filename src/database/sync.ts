@@ -43,9 +43,7 @@ export const sync = async () => {
               updated: records
                 .filter((r) => !r.server_deleted_at)
                 .map(mapFromSupabase),
-              deleted: records
-                .filter((r) => r.server_deleted_at)
-                .map((r) => r.id),
+              deleted: [],
             }
           })
         )

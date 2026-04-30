@@ -117,7 +117,16 @@ function PurchaseOrderDetail({order, supplier, items, transactions}: {
               <Text style={s.supplierIconText}>{supplier?.name?.charAt(0).toUpperCase() ?? '?'}</Text>
             </View>
             <View style={{flex: 1}}>
-              <Text style={s.supplierName}>{supplier?.name ?? '—'}</Text>
+              <View style={{flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', opacity: 0.4}}>
+                <Text style={[
+                  s.supplierName,
+                  supplier?._raw.server_deleted_at && {
+                    textDecorationLine: 'line-through',
+                    opacity: .4
+                  }
+                ]}>{supplier?.name ?? '—'}</Text>
+                <Text>{supplier?._raw.server_deleted_at && ' (deleted supplier)'}</Text>
+              </View>
               <Text style={s.orderDate}>{new Date(order.orderDate).toLocaleDateString('en-US', {
                 year: 'numeric', month: 'long', day: 'numeric'
               })}</Text>
@@ -196,7 +205,6 @@ function PurchaseOrderDetail({order, supplier, items, transactions}: {
         visible={payVisible}
         due={due}
         onClose={() => setPayVisible(false)}
-        // onPay={(amount) => addPurchasePayment(order, amount, isOnline)}
         onPay={async (amount) => { await addPurchasePayment(order, amount, isOnline) }}
       />
     </View>

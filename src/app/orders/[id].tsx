@@ -108,7 +108,7 @@ function OrderDetailItem({item}: { item: OrderItem }) {
 
 const EnhancedOrderDetailItem = withObservables(['item'], ({item}: { item: OrderItem }) => ({
   item: item.observe(),
-  product: item.product.observe(), 
+  product: item.product.observe(),
 }))(({item, product}: { item: OrderItem, product: any }) => (
   <View style={s.itemRow}>
     <View style={{flex: 1}}>
@@ -157,10 +157,21 @@ function OrderDetail({order, customer, items, transactions}: {
         <View style={s.card}>
           <View style={s.cardRow}>
             <View style={s.avatar}>
-              <Text style={s.avatarText}>{customer?.name?.charAt(0).toUpperCase() ?? '?'}</Text>
+              <Text style={[
+                s.avatarText,
+              ]}>{customer?.name?.charAt(0).toUpperCase() ?? '?'}</Text>
             </View>
             <View style={{flex: 1}}>
-              <Text style={s.customerName}>{customer?.name ?? '—'}</Text>
+              <View style={{flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', opacity: 0.4}}>
+                <Text style={[
+                  s.customerName,
+                  customer?._raw.server_deleted_at && {
+                    textDecorationLine: 'line-through',
+                    opacity: .4
+                  }
+                ]}>{customer?.name ?? '—'}</Text>
+                <Text>{customer?._raw.server_deleted_at && ' (deleted customer)'}</Text>
+              </View>
               <Text style={s.orderDate}>{new Date(order.orderDate).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
@@ -178,7 +189,7 @@ function OrderDetail({order, customer, items, transactions}: {
         <View style={s.card}>
           <Text style={s.cardTitle}>Items</Text>
           {items.map((item) => (
-             <OrderDetailItem key={item.id} item={item} />
+            <OrderDetailItem key={item.id} item={item}/>
           ))}
         </View>
 

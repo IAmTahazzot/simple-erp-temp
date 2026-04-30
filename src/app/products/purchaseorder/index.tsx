@@ -25,7 +25,18 @@ const PurchaseOrderRow = withObservables(['order'], ({order}: {order: PurchaseOr
       onPress={onPress}
       style={({pressed}) => [s.row, pressed && {backgroundColor: '#f9fafb'}]}>
       <View style={{flex: 1}}>
-        <Text style={s.rowName}>{supplier?.name ?? '—'}</Text>
+        <View style={{flexDirection: 'row', alignItems: 'center', gap: 6}}>
+
+          <Text style={[
+            s.rowName,
+            supplier?._raw.server_deleted_at && {
+              textDecorationLine: 'line-through',
+              opacity: .4
+            }
+          ]}>{supplier?.name ?? 'Unknown Supplier'}</Text>
+
+          <Text style={{ opacity: 0.4 }}>{supplier?._raw.server_deleted_at && ' (deleted supplier)'}</Text>
+        </View>
         <Text style={s.rowDate}>{new Date(order.orderDate).toLocaleDateString()}</Text>
       </View>
       <View style={{alignItems: 'flex-end', gap: 6}}>

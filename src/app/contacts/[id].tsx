@@ -100,6 +100,9 @@ function CustomerDetails({contact}: { contact: Customer }) {
               onPress() {
                 deleteContact(contact, 'customer', isOnline).then(r => {
                   ToastAndroid.show('Customer has been deleted', ToastAndroid.SHORT)
+                  router.push({
+                    pathname: '/contacts'
+                  })
                 }).catch(err => {
                   ToastAndroid.show('Unable to delete', ToastAndroid.SHORT)
                 })
@@ -199,6 +202,9 @@ function SupplierDetails({contact}: { contact: Supplier }) {
               onPress() {
                 deleteContact(contact, 'supplier', isOnline).then(r => {
                   ToastAndroid.show('Supplier has been deleted', ToastAndroid.SHORT)
+                  router.push({
+                    pathname: '/contacts/suppliers'
+                  })
                 }).catch(err => {
                   ToastAndroid.show('Unable to delete', ToastAndroid.SHORT)
                 })
