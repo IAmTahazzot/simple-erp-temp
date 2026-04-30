@@ -45,11 +45,17 @@ const ProductItem = ({item,  inventory, onPress}: {
         pressed && {backgroundColor: '#f0f0f0'},
       ]}
       onPress={onPress}>
-      <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
+      <View style={{flexDirection: 'row', alignItems: 'center', gap: 12, justifyContent: 'space-between'}}>
         <View style={{gap: 3}}>
           <Text style={{fontSize: 16, fontFamily: 'InterBold'}}>{item.name}</Text>
           <Text style={{color: isLowStock ? '#d9534f' : '#5cb85c', fontFamily: 'InterMedium'}}>
             {stock} Available
+          </Text>
+        </View>
+        
+        <View>
+          <Text style={{fontSize: 20, fontFamily: 'InterMedium', color: '#333333'}}>
+            ৳{item.price.toFixed(2)}
           </Text>
         </View>
       </View>
