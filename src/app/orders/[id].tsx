@@ -162,7 +162,7 @@ function OrderDetail({order, customer, items, transactions}: {
               ]}>{customer?.name?.charAt(0).toUpperCase() ?? '?'}</Text>
             </View>
             <View style={{flex: 1}}>
-              <View style={{flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', opacity: 0.4}}>
+              <View style={{flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap'}}>
                 <Text style={[
                   s.customerName,
                   customer?._raw.server_deleted_at && {
@@ -170,7 +170,7 @@ function OrderDetail({order, customer, items, transactions}: {
                     opacity: .4
                   }
                 ]}>{customer?.name ?? '—'}</Text>
-                <Text>{customer?._raw.server_deleted_at && ' (deleted customer)'}</Text>
+                <Text style={{opacity: 0.4}}>{customer?._raw.server_deleted_at && ' (deleted customer)'}</Text>
               </View>
               <Text style={s.orderDate}>{new Date(order.orderDate).toLocaleDateString('en-US', {
                 year: 'numeric',
