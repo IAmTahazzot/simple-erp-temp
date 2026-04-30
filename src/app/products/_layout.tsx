@@ -1,6 +1,6 @@
 
 import { BaseLayout } from '@/components/core/BaseLayout';
-import { ProductHeader } from '@/components/features/Products/ProductHeader';
+import { ProductHeader } from '@/features/products/components/ProductHeader';
 import { Slot } from 'expo-router';
 
 export default function RootLayout() {

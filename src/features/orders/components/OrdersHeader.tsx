@@ -8,7 +8,7 @@ import {Text, View, StyleSheet} from 'react-native';
 import {Button} from '@/components/ui/Button';
 import {useRouter} from 'expo-router';
 import {useState} from 'react';
-import {NewProductModal} from '@/components/features/Products/NewProduct';
+import {NewProductModal} from '../../products/components/NewProduct';
 import {NewContact} from '@/features/contacts/components/NewContact';
 
 const ICON_SIZE = 22;

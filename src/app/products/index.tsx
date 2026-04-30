@@ -1,14 +1,12 @@
-import {Pressable, View, Text, FlatList, Image, TextInput, ActivityIndicator} from "react-native";
+import {Pressable, View, Text, FlatList, TextInput, ActivityIndicator} from "react-native";
 import {database} from '@/database';
 import Product from '@/database/models/Product';
 import {withObservables} from '@nozbe/watermelondb/react';
 import {Q} from '@nozbe/watermelondb';
 import React, {useCallback, useMemo, useState} from 'react'
-import {UpdateProduct} from '@/components/features/Products/UpdateProduct';
-import ProductImages from '@/database/models/Images';
+import {UpdateProduct} from '@/features/products/components/UpdateProduct';
 import Inventory from '@/database/models/Inventory';
-import {Image as ImageIcon, Search as SearchIcon} from 'lucide-react-native'
-import {useOnline} from '@/hooks/use-online';
+import {Search as SearchIcon} from 'lucide-react-native'
 
 // ─── Fuzzy score ─────────────────────────────────────────────────────────────
 // Returns 0 (no match) to 100 (exact). Results below MIN_SCORE are hidden.
@@ -32,31 +30,14 @@ function fuzzyScore(name: string, query: string): number {
 }
 
 // ─── ProductItem ──────────────────────────────────────────────────────────────
-const ProductItem = ({item, images, inventory, onPress}: {
+const ProductItem = ({item,  inventory, onPress}: {
   item: Product,
-  images: ProductImages[],
   inventory: Inventory[],
   onPress: () => void
 }) => {
   const stock = inventory[0]?.quantity ?? 0
   const isLowStock = stock < (inventory[0]?.lowStockThreshold || 1)
-  const { isOnline } = useOnline()
 
-  let imageComponent = null
-  
-  if (isOnline && images[0]?.imageUrl) {
-    imageComponent = <Image source={{uri: images[0].imageUrl}} style={{width: 50, height: 50, borderRadius: 4}}/>
-  } else {
-    imageComponent = (
-      <View style={{
-        width: 50, height: 50, borderRadius: 4,
-        backgroundColor: '#efefef', alignItems: 'center', justifyContent: 'center'
-      }}>
-        <ImageIcon size={24} color="#a0a0a0"/>
-      </View>
-    )
-  }
-  
   return (
     <Pressable
       style={({pressed}) => [
@@ -65,7 +46,6 @@ const ProductItem = ({item, images, inventory, onPress}: {
       ]}
       onPress={onPress}>
       <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
-        {imageComponent}
         <View style={{gap: 3}}>
           <Text style={{fontSize: 16, fontFamily: 'InterBold'}}>{item.name}</Text>
           <Text style={{color: isLowStock ? '#d9534f' : '#5cb85c', fontFamily: 'InterMedium'}}>
@@ -79,7 +59,6 @@ const ProductItem = ({item, images, inventory, onPress}: {
 
 const EnhancedProductItem = withObservables(['item'], ({item}: { item: Product }) => ({
   item: item.observe(),
-  images: item.images.observe(),
   inventory: item.inventories.observe(),
 }))(ProductItem)
 

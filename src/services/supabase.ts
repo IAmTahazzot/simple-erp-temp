@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import {useAuthStore} from '@/store/authStore';
 
 export const supabase = createClient(
   process.env.EXPO_PUBLIC_SUPABASE_URL!,
@@ -18,7 +17,7 @@ export const supabase = createClient(
 // Wrap test code in an async function to avoid top-level await errors in Metro/Hermes
 const secureAuth = async () => {
   const res = await supabase.auth.signInWithPassword({
-    email: 'nasimautopoint.ltd@gmail.com',
+    email: 'lyra@gmail.com',
     password: '123',
   });
 

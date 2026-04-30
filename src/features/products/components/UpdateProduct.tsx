@@ -1,13 +1,11 @@
 import React, {useState, useEffect} from 'react';
-import {View, Text, TextInput, StyleSheet, Pressable, Alert, Image, ToastAndroid} from 'react-native';
+import {View, Text, TextInput, StyleSheet, ToastAndroid} from 'react-native';
 import {BaseModal} from '@/components/core/BaseModal';
 import {MegaInput} from '@/components/ui/Input';
 import {Colors, Themes} from '@/constants/colors';
 import {useCommonTranslation} from '@/i18n/useTypedTranslation';
-import * as ImagePicker from 'expo-image-picker';
-import {ImagePlus} from 'lucide-react-native';
 import Product from '@/database/models/Product';
-import {updateProduct, resolveImage, deleteProduct} from '@/features/products/functions';
+import {updateProduct, deleteProduct} from '@/features/products/functions';
 import NetInfo from '@react-native-community/netinfo';
 import {Button} from '@/components/ui/Button';
 import {AlertDialog} from '@/components/ui/AlertDialog';
@@ -22,8 +20,6 @@ interface UpdateProductProps {
 export function UpdateProduct({visible, onClose, prevProduct}: UpdateProductProps) {
   const {t} = useCommonTranslation();
 
-  const [newImageUri, setNewImageUri] = useState<string | null>(null);
-  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
   const [inventory, setInventory] = useState<number>(0);
   const [stockWarning, setStockWarning] = useState<number>(0);
   const [shouldDelete, setShouldDelete] = useState(false);
@@ -46,12 +42,6 @@ export function UpdateProduct({visible, onClose, prevProduct}: UpdateProductProp
       cost: prevProduct.cost,
       description: prevProduct.description || '',
     });
-    setNewImageUri(null);
-
-    prevProduct.images.fetch().then((imgs) => {
-      const primary = imgs.find((img) => img.isPrimary) ?? imgs[0];
-      setExistingImageUrl(primary ? resolveImage(primary.imageUrl) : null);
-    });
 
     prevProduct.inventories.fetch().then((invs) => {
       setInventory(invs[0]?.quantity ?? 0);
@@ -70,37 +60,14 @@ export function UpdateProduct({visible, onClose, prevProduct}: UpdateProductProp
     await updateProduct(
       prevProduct,
       product,
-      newImageUri,
       inventory,
       stockWarning,
       !!isConnected,
     );
 
-    setNewImageUri(null);
     onClose();
   };
-
-  const pickImage = async () => {
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Permission required', 'Camera permission is needed to take a photo.');
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ['images'],
-      aspect: [7, 7],
-      quality: 0.1,
-    });
-
-    if (!result.canceled) {
-      setNewImageUri(result.assets[0].uri);
-    }
-  };
-
-  // Show newly picked image first, fall back to existing
-  const displayImage = newImageUri ?? existingImageUrl;
-
+  
   return (
     <BaseModal
       visible={visible}
@@ -110,24 +77,6 @@ export function UpdateProduct({visible, onClose, prevProduct}: UpdateProductProp
       title={t('product.update')}>
       <View style={styles.container}>
         <View style={{gap: 12}}>
-
-          <Text style={{fontSize: 13, fontFamily: 'InterMedium'}}>{'Media'}</Text>
-          <Pressable style={styles.imageContainer} onPress={pickImage}>
-            {displayImage ? (
-              <Image
-                source={{uri: displayImage}}
-                style={{height: 300, width: '100%', borderRadius: 8}}
-              />
-            ) : (
-              <View style={{gap: 4, alignItems: 'center'}}>
-                <ImagePlus size={20} strokeWidth={2} color={Themes.INFO}/>
-                <Text style={{fontSize: 12, color: Themes.INFO, fontFamily: 'InterMedium'}}>
-                  {'Add product image'}
-                </Text>
-              </View>
-            )}
-          </Pressable>
-
           <TextInput
             style={styles.productNameInput}
             value={product.name}

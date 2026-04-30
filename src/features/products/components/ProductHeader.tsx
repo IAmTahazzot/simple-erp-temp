@@ -10,7 +10,7 @@ import {Text, View, StyleSheet} from 'react-native';
 import {Button} from '@/components/ui/Button';
 import {useRouter} from 'expo-router';
 import {useState} from 'react';
-import {NewProductModal} from '@/components/features/Products/NewProduct';
+import {NewProductModal} from '@/features/products/components/NewProduct';
 
 const ICON_SIZE = 22;
 const ICON_COLOR = '#111827';

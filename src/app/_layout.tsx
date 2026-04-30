@@ -81,7 +81,7 @@ export default function RootLayout() {
           <Text
             style={{ color: "#fff", fontSize: 16, fontFamily: "InterMedium" }}
           >
-            Getting things ready{isSyncing ? " (syncing data...)" : ""}...
+            Getting things ready{isSyncing ? " (syncing data...)" : "..."}
           </Text>
         </View>
       </View>

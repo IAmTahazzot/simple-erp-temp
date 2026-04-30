@@ -1,17 +1,10 @@
 import React, {useState} from 'react';
 import {View, Text, TextInput, StyleSheet, Pressable, Alert, Image} from 'react-native';
 import {BaseModal} from '@/components/core/BaseModal';
-import {Button} from '@/components/ui/Button';
-import {Input, MegaInput} from '@/components/ui/Input'
+import {MegaInput} from '@/components/ui/Input'
 import {Colors, Themes} from '@/constants/colors';
 import {useCommonTranslation} from '@/i18n/useTypedTranslation';
-import * as ImagePicker from 'expo-image-picker'
-import {readAsStringAsync, EncodingType} from 'expo-file-system/legacy';
-import {decode} from 'base64-arraybuffer';
 import {ImagePlus} from 'lucide-react-native';
-import {supabase} from '@/services/supabase';
-import {database} from '@/database';
-import Product from '@/database/models/Product';
 import {useOnline} from '@/hooks/use-online';
 import { createProduct} from '@/features/products/functions';
 
@@ -23,7 +16,6 @@ interface NewProductModalProps {
 export function NewProductModal({visible, onClose}: NewProductModalProps) {
   const {t} = useCommonTranslation()
 
-  const [image, setImage] = useState<string | null>(null);
   const [inventory, setInventory] = useState<number>(0);
   const [stockWarning, setStockWarning] = useState<number>(0);
   const {isOnline} = useOnline()
@@ -47,7 +39,6 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
       description: '',
       imageUri: null,
     })
-    setImage(null)
   }
 
   const handleSave = async () => {
@@ -58,7 +49,6 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
         cost: product?.cost || 0,
         description: product?.description || '',
       },
-      image,           // picker URI from your existing state
       inventory,       // your existing state
       stockWarning,    // your existing state
       isOnline,
@@ -68,28 +58,6 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
     onClose();
   };
 
-  const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestCameraPermissionsAsync()
-
-    if (!permissionResult.granted) {
-      Alert.alert('Permission required', 'Camera permission is required to pick an image.');
-      return;
-    }
-
-    let result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ['images'],
-      aspect: [7, 7],
-      quality: .05,
-    })
-
-    if (!result.canceled) {
-      setImage(result.assets[0].uri)
-      setProduct(prev => ({...prev, imageUri: result.assets[0].uri} as any))
-
-      console.log('size in kb', result.assets[0].fileSize ? (result.assets[0].fileSize / 1024).toFixed(2) : 'unknown')
-    }
-  }
-
   return (
     <BaseModal visible={visible}
                onClose={onClose}
@@ -98,25 +66,6 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
                title={t('product.new')}>
       <View style={styles.container}>
         <View style={{gap: 12}}>
-          
-          <Text style={{fontSize: 13, fontFamily: 'InterMedium'}}>{'Media'}</Text>
-          <Pressable style={styles.imageContainer} onPress={pickImage}>
-            {
-              image ? (
-                  <Image source={{uri: image}}
-                         style={{
-                           height: 300, width: '100%', borderRadius: 8
-                         }}/>
-                )
-                : (
-                  <View style={{display: 'flex', gap: 4, alignItems: 'center'}}>
-                    <ImagePlus size={20} strokeWidth={2} color={Themes.INFO}/>
-                    <Text
-                      style={{fontSize: 12, color: Themes.INFO, fontFamily: 'InterMedium'}}>{'Add product image'}</Text>
-                  </View>
-                )
-            }
-          </Pressable>
 
           <TextInput style={styles.productNameInput}
                      placeholderTextColor={Colors.light.placeholder}
