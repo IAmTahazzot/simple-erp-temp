@@ -203,7 +203,6 @@ function DashboardStats({
             <Text style={[s.statLabel, {color: "#6b7280"}]}>{'Account Payable'}</Text>
           </View>
         </View>
-
       </View>
     </ScrollView>
   );

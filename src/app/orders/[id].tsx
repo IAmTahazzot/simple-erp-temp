@@ -15,7 +15,7 @@ import {
 import {useLocalSearchParams, useRouter} from 'expo-router'
 import {withObservables} from '@nozbe/watermelondb/react'
 import {database} from '@/database'
-import Order from '@/database/models/Order'
+import Order, {OrderStatus} from '@/database/models/Order'
 import OrderItem from '@/database/models/OrderItem'
 import TransactionModel from '@/database/models/Transaction'
 import {ArrowLeft, CheckCircle, Clock, AlertCircle} from 'lucide-react-native'
@@ -24,11 +24,12 @@ import {useOnline} from '@/hooks/use-online'
 import {useCommonTranslation} from '@/i18n/useTypedTranslation';
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
-const STATUS_CONFIG: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
+const STATUS_CONFIG: Record<OrderStatus, { color: string; icon: React.ReactNode; label: string }> = {
   paid: {color: '#065f46', icon: <CheckCircle size={16} color="#065f46"/>, label: 'Paid'},
   partial: {color: '#1e40af', icon: <Clock size={16} color="#1e40af"/>, label: 'Partially paid'},
   pending: {color: '#92400e', icon: <AlertCircle size={16} color="#92400e"/>, label: 'Unpaid'},
-  cancelled: {color: '#991b1b', icon: <AlertCircle size={16} color="#991b1b"/>, label: 'Cancelled'},
+  canceled: {color: '#991b1b', icon: <AlertCircle size={16} color="#991b1b"/>, label: 'Cancelled'},
+  refunded: {color: '#991b1b', icon: <AlertCircle size={16} color="#991b1b"/>, label: 'Refunded'},
 }
 
 // ─── Pay Modal ────────────────────────────────────────────────────────────────

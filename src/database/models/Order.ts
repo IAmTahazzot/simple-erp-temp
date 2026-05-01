@@ -4,6 +4,20 @@ import Transaction from './Transaction'
 import OrderItem from './OrderItem'
 import Customer from './Customer'
 
+export enum OrderStatus {
+  ACTIVE = 'active',        // created and valid
+  CANCELED = 'canceled',    // user/system canceled
+  COMPLETED = 'completed',  // fulfilled (optional depending on system)
+}
+
+export enum PaymentStatus {
+  UNPAID = 'unpaid',
+  PARTIALLY_PAID = 'partially_paid',
+  PAID = 'paid',
+  REFUNDED = 'refunded',              // fully refunded
+  PARTIALLY_REFUNDED = 'partially_refunded',
+}
+
 export default class Order extends Model {
   static table = 'orders'
   static associations = {
@@ -16,7 +30,10 @@ export default class Order extends Model {
   @field('customer_id') customerId!: string
   @field('user_id') userId!: string
   @date('order_date') orderDate!: Date
-  @field('status') status!: string
+  @field('status') status!: OrderStatus
+  @field('payment_status') paymentStatus!: PaymentStatus
+  @field('due_amount') dueAmount?: number
+  @field('profit_amount') profitAmount?: number
   @field('total_amount') totalAmount!: number
   @field('discount_type') discountType?: string
   @field('discount_value') discountValue?: number

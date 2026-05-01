@@ -5,6 +5,7 @@ import OrderItem from '@/database/models/OrderItem'
 import TransactionModel from '@/database/models/Transaction'
 import {supabase} from '@/services/supabase'
 import {sync} from '@/database/sync'
+import { OrderStatus } from '@/database/models/Order'
 
 export type OrderLine = {
   productId: string
@@ -13,10 +14,10 @@ export type OrderLine = {
   unitPrice: number
 }
 
-function computeStatus(totalAmount: number, amountPaid: number): string {
-  if (amountPaid <= 0) return 'pending'
-  if (amountPaid >= totalAmount) return 'paid'
-  return 'partial'
+function computeStatus(totalAmount: number, amountPaid: number): OrderStatus {
+  if (amountPaid <= 0) return OrderStatus.PENDING
+  if (amountPaid >= totalAmount) return OrderStatus.PAID 
+  return OrderStatus.PARTIAL
 }
 
 // ─── Create Order ─────────────────────────────────────────────────────────────
@@ -37,7 +38,7 @@ export const createOrder = async (
       o.customerId = customerId
       o.userId = userId           // set from your auth context
       o.orderDate = new Date()
-      o.status = 'pending'
+      o.status = OrderStatus.PENDING
       o.totalAmount = totalAmount
       o.discountType = discountType ?? undefined
       o.discountValue = discountValue
@@ -71,14 +72,13 @@ export const createOrder = async (
       })
     ))
 
-    await sync().catch((e) => console.warn('Sync failed after order create:', e))
+    // await sync().catch((e) => console.warn('Sync failed after order create:', e))
   }
 
   return order
 }
 
 // ─── Add Payment ──────────────────────────────────────────────────────────────
-
 export const addPayment = async (
   order: Order,
   amount: number,
@@ -126,7 +126,7 @@ export const addPayment = async (
         if (error) console.warn('Order status update failed:', error)
       })
 
-    await sync().catch((e) => console.warn('Sync failed after payment:', e))
+    // await sync().catch((e) => console.warn('Sync failed after payment:', e))
   }
 
   return tx
