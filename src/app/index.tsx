@@ -246,36 +246,36 @@ function DashboardStats({
         <Text style={s.sectionTitle}>Others</Text>
         <View style={s.grid}>
           <View style={[s.statCard,]}>
-            <View style={[s.statIcon, {backgroundColor: "#f3f4f6"}]}>
-              <Users size={18} color="#111827"/>
-            </View>
-            <View>
-              <Text style={[s.statValue, {color: "#111827"}]}>
-                ৳{receivable >= 1000 ? `${(receivable / 1000).toFixed(1)}k` : receivable.toFixed(0)}
-              </Text>
-              <Text style={[s.statLabel, {color: "#6b7280"}]}>{'Account Receivable'}</Text>
-            </View>
-          </View>
-
-          <View style={[s.statCard,]}>
             <View style={[s.statIcon, {backgroundColor: "#fee2e2"}]}>
-              <TrendingDown size={18} color="#991b1b"/>
+              <TrendingUp size={18} color="#991b1b"/>
             </View>
             <View>
               <Text style={[s.statValue, {color: "#991b1b"}]}>
-                ৳{payback >= 1000 ? `${(payback / 1000).toFixed(1)}k` : payback.toFixed(0)}
+                ৳{receivable >= 1000 ? `${(receivable / 1000).toFixed(1)}k` : receivable.toFixed(0)}
               </Text>
-              <Text style={[s.statLabel, {color: "#991b1b"}]}>{'Total Pay Back'}</Text>
+              <Text style={[s.statLabel, {color: "#991b1b"}]}>{'Account Receivable'}</Text>
             </View>
           </View>
 
+          {/*<View style={[s.statCard,]}>*/}
+          {/*  <View style={[s.statIcon, {backgroundColor: "#c8ffed"}]}>*/}
+          {/*    <TrendingDown size={18} color={"#06864a"}/>*/}
+          {/*  </View>*/}
+          {/*  <View>*/}
+          {/*    <Text style={[s.statValue, {color: "#1b9952"}]}>*/}
+          {/*      ৳{payback >= 1000 ? `${(payback / 1000).toFixed(1)}k` : payback.toFixed(0)}*/}
+          {/*    </Text>*/}
+          {/*    <Text style={[s.statLabel, {color: "#1b9952"}]}>{'Total Pay Back'}</Text>*/}
+          {/*  </View>*/}
+          {/*</View>*/}
+
           <View style={[s.statCard,]}>
-            <View style={[s.statIcon, {backgroundColor: "#f3f4f6"}]}>
-              <Users size={18} color="#111827"/>
+            <View style={[s.statIcon, {backgroundColor: "#fee2e2"}]}>
+              <TrendingDown size={18} color={"#991b1b"}/>
             </View>
             <View>
-              <Text style={[s.statValue, {color: "#111827"}]}>0{/*{customers.length}*/}</Text>
-              <Text style={[s.statLabel, {color: "#6b7280"}]}>{'Account Payable'}</Text>
+              <Text style={[s.statValue, {color: "#991b1b"}]}>0{/*{customers.length}*/}</Text>
+              <Text style={[s.statLabel, {color: "#991b1b"}]}>{'Account Payable'}</Text>
             </View>
           </View>
         </View>

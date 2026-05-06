@@ -9,7 +9,7 @@ import Order, { OrderStatus } from '@/database/models/Order'
 import Customer from '@/database/models/Customer'
 import { withObservables } from '@nozbe/watermelondb/react'
 import { Q } from '@nozbe/watermelondb'
-import { Search as SearchIcon, ChevronRight } from 'lucide-react-native'
+import { Search as SearchIcon, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react-native'
 import { useRouter } from 'expo-router'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -123,16 +123,31 @@ function OrdersIndex({ orders, customers }: { orders: Order[]; customers: Custom
   return (
     <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
       {/* Summary bar */}
-      {filter !== 'payback' && globalDue > 0 && (
-        <View style={[s.summaryBar, { paddingBottom: filter === 'all' && globalPayback > 0 ? 4 : 12 }]}>
-          <Text style={s.summaryText}>Total Due Across All Orders</Text>
-          <Text style={s.summaryAmount}>৳{globalDue.toFixed(2)}</Text>
-        </View>
-      )}
-      {filter !== 'due' && globalPayback > 0 && (
-        <View style={[s.summaryBar, { paddingTop: filter === 'all' && globalDue > 0 ? 4 : 12 }]}>
-          <Text style={[s.summaryText, { color: '#059669' }]}>Total Pay Back Across All</Text>
-          <Text style={[s.summaryAmount, { color: '#059669', borderColor: '#34d399' }]}>৳{globalPayback.toFixed(2)}</Text>
+      {(globalDue > 0 || globalPayback > 0) && (
+        <View style={s.summaryBar}>
+          {filter !== 'payback' && globalDue > 0 && (
+            <View style={s.summaryBlock}>
+              <View style={s.summaryHeader}>
+                <TrendingUp size={16} color="#d71717" />
+                <Text style={s.summaryText}>Total Due</Text>
+              </View>
+              <Text style={s.summaryAmountDue}>৳{globalDue.toFixed(2)}</Text>
+            </View>
+          )}
+
+          {filter === 'all' && globalDue > 0 && globalPayback > 0 && (
+            <View style={s.summaryDivider} />
+          )}
+
+          {filter !== 'due' && globalPayback > 0 && (
+            <View style={s.summaryBlock}>
+              <View style={s.summaryHeader}>
+                <TrendingDown size={16} color="#059669" />
+                <Text style={s.summaryText}>Total Pay Back</Text>
+              </View>
+              <Text style={s.summaryAmountPayback}>৳{globalPayback.toFixed(2)}</Text>
+            </View>
+          )}
         </View>
       )}
 
@@ -201,11 +216,34 @@ export default withObservables([], () => ({
 
 const s = StyleSheet.create({
   summaryBar: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingVertical: 12 
+    flexDirection: 'row', 
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginHorizontal: 12,
+    marginTop: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    justifyContent: 'space-around',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 }
   },
-  summaryText: { fontSize: 13, fontFamily: 'InterRegular', color: '#2f2f2f' },
-  summaryAmount: { fontSize: 20, fontFamily: 'InterBold', color: '#d71717', borderWidth: 1, padding: 2, borderColor: '#ff5a5a' , borderRadius: 6},
+  summaryBlock: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 6
+  },
+  summaryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6
+  },
+  summaryText: { fontSize: 13, fontFamily: 'InterMedium', color: '#6b7280' },
+  summaryAmountDue: { fontSize: 20, fontFamily: 'InterBold', color: '#d71717' },
+  summaryAmountPayback: { fontSize: 20, fontFamily: 'InterBold', color: '#059669' },
+  summaryDivider: { width: 1, backgroundColor: '#f0f0f0', marginHorizontal: 12 },
   searchBar: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: '#efefef', borderRadius: 12,
