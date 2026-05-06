@@ -1,8 +1,8 @@
 // app/orders/customerOrders/[customerId]/[customerId].tsx
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   View, Text, FlatList, Pressable,
-  ActivityIndicator, StyleSheet,
+  ActivityIndicator, StyleSheet, Modal, TextInput, Alert, KeyboardAvoidingView, Platform
 } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { withObservables } from '@nozbe/watermelondb/react'
@@ -11,6 +11,8 @@ import { database } from '@/database'
 import Order, { OrderStatus, PaymentStatus } from '@/database/models/Order'
 import Customer from '@/database/models/Customer'
 import { ArrowLeft, ChevronRight } from 'lucide-react-native'
+import { addPayment } from '@/features/orders/functions'
+import { useOnline } from '@/hooks/use-online'
 
 // ─── Status badge colors ──────────────────────────────────────────────────────
 const PAYMENT_COLORS: Record<string, { bg: string; text: string }> = {
@@ -22,7 +24,9 @@ const PAYMENT_COLORS: Record<string, { bg: string; text: string }> = {
 }
 
 // ─── Order row ────────────────────────────────────────────────────────────────
-function OrderRow({ order, onPress }: { order: Order; onPress: () => void }) {
+const EnhancedOrderRow = withObservables(['order'], ({ order }: { order: Order }) => ({
+  order: order.observe(),
+}))(function OrderRow({ order, onPress }: { order: Order; onPress: () => void }) {
   const isCanceled = order.status === OrderStatus.CANCELED
   const colors = isCanceled 
     ? { bg: '#f3f4f6', text: '#4b5563' } // Gray for canceled
@@ -57,11 +61,66 @@ function OrderRow({ order, onPress }: { order: Order; onPress: () => void }) {
       <ChevronRight size={16} color="#9ca3af" style={{ marginLeft: 8 }} />
     </Pressable>
   )
+})
+
+// ─── Bulk Pay Modal ───────────────────────────────────────────────────────────
+function BulkPayModal({ visible, totalDue, onClose, onPay }: {
+  visible: boolean; totalDue: number; onClose: () => void
+  onPay: (amount: number) => Promise<void>
+}) {
+  const [amount, setAmount] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handlePay = async () => {
+    const val = parseFloat(amount)
+    if (!val || val <= 0) { Alert.alert('Enter a valid amount'); return }
+    if (val > totalDue) { Alert.alert(`Amount exceeds total due ৳${totalDue.toFixed(2)}`); return }
+    setLoading(true)
+    await onPay(val)
+    setLoading(false)
+    setAmount('')
+    onClose()
+  }
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <View style={s.modalOverlay}>
+          <View style={s.modalSheet}>
+            <Text style={s.modalTitle}>Record Bulk Payment</Text>
+            <Text style={s.modalSub}>Total Due: ৳{totalDue.toFixed(2)}</Text>
+            <TextInput
+              style={s.modalInput}
+              value={amount}
+              onChangeText={setAmount}
+              placeholder="Enter amount"
+              placeholderTextColor="#aaa"
+              inputMode="numeric"
+              autoFocus
+            />
+            <Pressable onPress={() => setAmount(totalDue.toFixed(2))} style={s.quickLink}>
+              <Text style={s.quickLinkText}>Pay full ৳{totalDue.toFixed(2)}</Text>
+            </Pressable>
+            <View style={s.modalActions}>
+              <Pressable onPress={onClose} style={s.cancelBtn}>
+                <Text style={s.cancelBtnText}>Cancel</Text>
+              </Pressable>
+              <Pressable onPress={handlePay} style={s.confirmBtn} disabled={loading}>
+                {loading ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.confirmBtnText}>Record</Text>}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  )
 }
 
 // ─── Customer Orders Screen ───────────────────────────────────────────────────
 function CustomerOrdersScreen({ customer, orders }: { customer: Customer; orders: Order[] }) {
   const router = useRouter()
+  const { isOnline } = useOnline()
+  const [bulkPayVisible, setBulkPayVisible] = useState(false)
 
   const { totalDue, totalProfit, activeOrders } = useMemo(() => {
     let totalDue = 0
@@ -74,6 +133,22 @@ function CustomerOrdersScreen({ customer, orders }: { customer: Customer; orders
     }
     return { totalDue, totalProfit, activeOrders }
   }, [orders])
+
+  const handleBulkPay = async (amount: number) => {
+    let remaining = amount;
+    // Filter active unpaid orders, sort oldest first
+    const unpaidOrders = orders
+      .filter(o => (o.dueAmount ?? 0) > 0 && o.status !== OrderStatus.CANCELED)
+      .sort((a, b) => new Date(a.orderDate).getTime() - new Date(b.orderDate).getTime());
+
+    for (const o of unpaidOrders) {
+      if (remaining <= 0) break;
+      const orderDue = o.dueAmount ?? 0;
+      const applyAmt = Math.min(orderDue, remaining);
+      await addPayment(o, applyAmt, isOnline);
+      remaining -= applyAmt;
+    }
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
@@ -90,7 +165,7 @@ function CustomerOrdersScreen({ customer, orders }: { customer: Customer; orders
 
       <View style={s.summaryRow}>
         <View style={[s.summaryCard, { backgroundColor: totalDue > 0 ? '#fee2e2' : '#d1fae5' }]}>
-          <Text style={[s.summaryLabel, { color: totalDue > 0 ? '#a60000' : '#000'}]}>Total Due</Text>
+          <Text style={[s.summaryLabel, { color: totalDue > 0 ? '#a60000' : '#000'}]}>{totalDue < 0 ? 'To Pay Back' : 'Total Due'}</Text>
           <Text style={[s.summaryValue, { color: totalDue > 0 ? '#991b1b' : '#065f46' }]}>
             ৳{Math.abs(totalDue).toFixed(2)}
           </Text>
@@ -107,16 +182,29 @@ function CustomerOrdersScreen({ customer, orders }: { customer: Customer; orders
         </View>
       </View>
 
+      {totalDue > 0 && (
+        <Pressable style={s.bulkPayBtn} onPress={() => setBulkPayVisible(true)}>
+          <Text style={s.bulkPayBtnText}>Record Bulk Payment</Text>
+        </Pressable>
+      )}
+
       <FlatList
         data={orders}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <OrderRow
+          <EnhancedOrderRow
             order={item}
             onPress={() => router.push({ pathname: '/orders/[id]', params: { id: item.id } })}
           />
         )}
         ListEmptyComponent={<Text style={s.empty}>No orders found</Text>}
+      />
+
+      <BulkPayModal 
+        visible={bulkPayVisible} 
+        totalDue={totalDue} 
+        onClose={() => setBulkPayVisible(false)} 
+        onPay={handleBulkPay} 
       />
     </View>
   )
@@ -138,7 +226,7 @@ export default function CustomerOrdersPage() {
         Q.where('server_deleted_at', Q.eq(null)),
         Q.sortBy('created_at', 'desc'),
       )
-      .observe(),
+      .observeWithColumns(['due_amount', 'profit_amount', 'status', 'payment_status', 'total_amount']),
   }))(CustomerOrdersLoader)
 
   return <Enhanced customerId={customerId} />
@@ -172,4 +260,18 @@ const s = StyleSheet.create({
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
   badgeText: { fontSize: 11, fontFamily: 'InterMedium', textTransform: 'capitalize' },
   empty: { textAlign: 'center', marginTop: 40, color: '#9f9f9f', fontFamily: 'InterRegular' },
+  bulkPayBtn: { backgroundColor: '#111827', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginHorizontal: 16, marginTop: 4, marginBottom: 8 },
+  bulkPayBtnText: { color: '#fff', fontFamily: 'InterBold', fontSize: 15 },
+  modalOverlay: { flex: 1, backgroundColor: '#00000055', justifyContent: 'flex-end' },
+  modalSheet: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
+  modalTitle: { fontSize: 18, fontFamily: 'InterBold', color: '#111', marginBottom: 4 },
+  modalSub: { fontSize: 14, color: '#6b7280', fontFamily: 'InterRegular', marginBottom: 20 },
+  modalInput: { borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 12, fontSize: 24, fontFamily: 'InterBold', color: '#111', marginBottom: 12 },
+  quickLink: { alignSelf: 'flex-start', marginBottom: 20 },
+  quickLinkText: { fontSize: 14, color: '#1e40af', fontFamily: 'InterMedium' },
+  modalActions: { flexDirection: 'row', gap: 12 },
+  cancelBtn: { flex: 1, borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  cancelBtnText: { fontSize: 15, fontFamily: 'InterMedium', color: '#374151' },
+  confirmBtn: { flex: 1, backgroundColor: '#111827', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  confirmBtnText: { fontSize: 15, fontFamily: 'InterBold', color: '#fff' },
 })

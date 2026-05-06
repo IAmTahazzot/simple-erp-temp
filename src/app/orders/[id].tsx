@@ -645,7 +645,7 @@ function OrderDetail({ order, customer, items, transactions }: {
   const refundedAmount = transactions.reduce((sum, t) => sum + (t.type === 'refund' ? Number(t.amount) : 0), 0)
   const netPaid = paidAmount - refundedAmount
   const totalAmt = Number(order.totalAmount) || 0
-  const due = totalAmt - netPaid
+  const due = order.dueAmount ?? (totalAmt - netPaid)
   const statusConfig = PAYMENT_STATUS_CONFIG[order.paymentStatus] ?? PAYMENT_STATUS_CONFIG.unpaid
   const hasTx = transactions.length > 0
   const isCanceled = order.status === OrderStatus.CANCELED
