@@ -98,8 +98,9 @@ function DashboardStats({
 
   const {revenue, orderCount, profit, receivable, payback} = useMemo(() => {
     const {start, end} = getPeriodRange(period);
+    // Include order if it's within the time period AND it's either not canceled or it has a non-zero due balance
     const filtered = orders.filter(
-      (o) => o.orderDate.getTime() >= start && o.orderDate.getTime() <= end && o.status !== OrderStatus.CANCELED
+      (o) => o.orderDate.getTime() >= start && o.orderDate.getTime() <= end && (o.status !== OrderStatus.CANCELED || (o.dueAmount !== 0 && o.dueAmount != null))
     );
     
     let revenue = 0;
@@ -113,6 +114,10 @@ function DashboardStats({
     let receivable = 0;
     let payback = 0;
     for (const o of orders) {
+      // For general un-filtered overall dues: follow the exact same logic (skip 0-due canceled)
+      if (o.status === OrderStatus.CANCELED && (o.dueAmount === 0 || o.dueAmount == null)) {
+        continue;
+      }
       const due = o.dueAmount || 0;
       if (due > 0) receivable += due;
       if (due < 0) payback += Math.abs(due);

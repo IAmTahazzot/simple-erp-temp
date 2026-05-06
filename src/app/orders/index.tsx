@@ -2,10 +2,10 @@
 import React, { useMemo, useState } from 'react'
 import {
   View, Text, FlatList, TextInput, Pressable,
-  ActivityIndicator, StyleSheet,
+  ActivityIndicator, StyleSheet, ScrollView
 } from 'react-native'
 import { database } from '@/database'
-import Order from '@/database/models/Order'
+import Order, { OrderStatus } from '@/database/models/Order'
 import Customer from '@/database/models/Customer'
 import { withObservables } from '@nozbe/watermelondb/react'
 import { Q } from '@nozbe/watermelondb'
@@ -17,7 +17,9 @@ type CustomerWithOrders = {
   customer: Customer
   orders: Order[]
   totalDue: number
+  totalPayback: number
   orderCount: number
+  latestOrderDate: number
 }
 
 // ─── Customer row ─────────────────────────────────────────────────────────────
@@ -34,9 +36,12 @@ function CustomerRow({ item, onPress }: { item: CustomerWithOrders; onPress: () 
         <Text style={s.rowSub}>{item.orderCount} order{item.orderCount !== 1 ? 's' : ''}</Text>
       </View>
       <View style={{ alignItems: 'flex-end', gap: 4 }}>
-        {/*{item.totalDue > 0 && (*/}
-        {/*  <Text style={s.dueText}>Due ৳{item.totalDue.toFixed(2)}</Text>*/}
-        {/*)}*/}
+        {item.totalDue > 0 && (
+          <Text style={s.dueText}>Due ৳{item.totalDue.toFixed(2)}</Text>
+        )}
+        {item.totalPayback > 0 && (
+          <Text style={s.paybackText}>Pay Back ৳{item.totalPayback.toFixed(2)}</Text>
+        )}
       </View>
       <ChevronRight size={18} color="#9ca3af" style={{ marginLeft: 8 }} />
     </Pressable>
@@ -47,18 +52,32 @@ function CustomerRow({ item, onPress }: { item: CustomerWithOrders; onPress: () 
 function OrdersIndex({ orders, customers }: { orders: Order[]; customers: Customer[] }) {
   const router = useRouter()
   const [query, setQuery] = useState('')
+  const [filter, setFilter] = useState<'all' | 'due' | 'payback'>('all')
 
   // Group orders by customer
   const customerGroups = useMemo<CustomerWithOrders[]>(() => {
     const customerMap = new Map<string, Customer>()
     customers.forEach(c => customerMap.set(c.id, c))
 
-    const grouped = new Map<string, { orders: Order[]; totalDue: number }>()
+    const grouped = new Map<string, { orders: Order[]; totalDue: number; totalPayback: number; latestOrderDate: number }>()
 
     for (const order of orders) {
-      const existing = grouped.get(order.customerId) ?? { orders: [], totalDue: 0 }
+      const due = order.dueAmount ?? 0
+
+      // Only skip canceled orders IF they have a 0 balance.
+      // If a canceled order still has an outstanding due/payback, we must include it.
+      if (order.status === OrderStatus.CANCELED && due === 0) continue
+
+      const existing = grouped.get(order.customerId) ?? { orders: [], totalDue: 0, totalPayback: 0, latestOrderDate: 0 }
       existing.orders.push(order)
-      existing.totalDue += Math.max(0, order.dueAmount ?? 0)
+      
+      if (due > 0) {
+        existing.totalDue += due
+      } else if (due < 0) {
+        existing.totalPayback += Math.abs(due)
+      }
+      
+      existing.latestOrderDate = Math.max(existing.latestOrderDate, order.orderDate?.getTime() ?? 0)
       grouped.set(order.customerId, existing)
     }
 
@@ -66,38 +85,69 @@ function OrdersIndex({ orders, customers }: { orders: Order[]; customers: Custom
     grouped.forEach((data, customerId) => {
       const customer = customerMap.get(customerId)
       if (!customer) return
+      
       result.push({
         customer,
         orders: data.orders,
         totalDue: data.totalDue,
+        totalPayback: data.totalPayback,
         orderCount: data.orders.length,
+        latestOrderDate: data.latestOrderDate,
       })
     })
 
-    // Sort by most due first, then alphabetically
-    return result.sort((a, b) => b.totalDue - a.totalDue || a.customer.name.localeCompare(b.customer.name))
+    return result
   }, [orders, customers])
 
-  // Filter by customer name
+  // Filter and sort
   const filtered = useMemo(() => {
-    if (!query.trim()) return customerGroups
-    const q = query.trim().toLowerCase()
-    return customerGroups.filter(g =>
-      g.customer.name.toLowerCase().includes(q)
-    )
-  }, [customerGroups, query])
+    let list = customerGroups
 
-  const totalDueAll = useMemo(() => customerGroups.reduce((sum, g) => sum + g.totalDue, 0), [customerGroups])
+    if (filter === 'due') {
+      list = list.filter(g => g.totalDue > 0)
+    } else if (filter === 'payback') {
+      list = list.filter(g => g.totalPayback > 0)
+    }
+
+    if (query.trim()) {
+      const q = query.trim().toLowerCase()
+      list = list.filter(g => g.customer.name.toLowerCase().includes(q))
+    }
+
+    return list.sort((a, b) => b.latestOrderDate - a.latestOrderDate)
+  }, [customerGroups, query, filter])
+
+  const globalDue = useMemo(() => customerGroups.reduce((sum, g) => sum + g.totalDue, 0), [customerGroups])
+  const globalPayback = useMemo(() => customerGroups.reduce((sum, g) => sum + g.totalPayback, 0), [customerGroups])
 
   return (
     <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
       {/* Summary bar */}
-      {totalDueAll > 0 && (
-        <View style={s.summaryBar}>
+      {filter !== 'payback' && globalDue > 0 && (
+        <View style={[s.summaryBar, { paddingBottom: filter === 'all' && globalPayback > 0 ? 4 : 12 }]}>
           <Text style={s.summaryText}>Total Due Across All Orders</Text>
-          <Text style={s.summaryAmount}>৳{totalDueAll.toFixed(2)}</Text>
+          <Text style={s.summaryAmount}>৳{globalDue.toFixed(2)}</Text>
         </View>
       )}
+      {filter !== 'due' && globalPayback > 0 && (
+        <View style={[s.summaryBar, { paddingTop: filter === 'all' && globalDue > 0 ? 4 : 12 }]}>
+          <Text style={[s.summaryText, { color: '#059669' }]}>Total Pay Back Across All</Text>
+          <Text style={[s.summaryAmount, { color: '#059669', borderColor: '#34d399' }]}>৳{globalPayback.toFixed(2)}</Text>
+        </View>
+      )}
+
+      {/* Tabs */}
+      <View style={s.tabsContainer}>
+         <Pressable onPress={() => setFilter('all')} style={[s.tab, filter === 'all' && s.activeTab]}>
+            <Text style={[s.tabText, filter === 'all' && s.activeTabText]}>All</Text>
+         </Pressable>
+         <Pressable onPress={() => setFilter('due')} style={[s.tab, filter === 'due' && s.activeTab]}>
+            <Text style={[s.tabText, filter === 'due' && s.activeTabText]}>Due Only</Text>
+         </Pressable>
+         <Pressable onPress={() => setFilter('payback')} style={[s.tab, filter === 'payback' && s.activeTab]}>
+            <Text style={[s.tabText, filter === 'payback' && s.activeTabText]}>Pay Back Only</Text>
+         </Pressable>
+      </View>
 
       {/* Search */}
       <View style={s.searchBar}>
@@ -175,5 +225,16 @@ const s = StyleSheet.create({
   rowName: { fontSize: 15, fontFamily: 'InterBold', color: '#111' },
   rowSub: { fontSize: 13, color: '#6b7280', fontFamily: 'InterRegular', marginTop: 2 },
   dueText: { fontSize: 13, fontFamily: 'InterMedium', color: '#dc2626' },
+  paybackText: { fontSize: 13, fontFamily: 'InterMedium', color: '#059669' },
   empty: { textAlign: 'center', marginTop: 40, color: '#9f9f9f', fontFamily: 'InterRegular' },
+  tabsContainer: {
+    flexDirection: 'row', paddingHorizontal: 12, marginTop: 12, gap: 8
+  },
+  tab: {
+    paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20,
+    backgroundColor: '#e5e7eb'
+  },
+  activeTab: { backgroundColor: '#111827' },
+  tabText: { fontSize: 14, fontFamily: 'InterMedium', color: '#4b5563' },
+  activeTabText: { color: '#fff' }
 })
