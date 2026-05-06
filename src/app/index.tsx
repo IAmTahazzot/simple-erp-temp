@@ -4,15 +4,19 @@ import {MainHeader} from "@/components/core/MainHeader";
 import {Select} from "@/components/ui/Select";
 import {database} from "@/database";
 import Customer from "@/database/models/Customer";
-import Order from "@/database/models/Order";
+import Order, { OrderStatus } from "@/database/models/Order";
 import Supplier from "@/database/models/Supplier";
+import Product from "@/database/models/Product";
+import Inventory from "@/database/models/Inventory";
 import {Q} from "@nozbe/watermelondb";
 import {withObservables} from "@nozbe/watermelondb/react";
 import {
   Building2,
   ShoppingCart,
+  TrendingDown,
   TrendingUp,
   Users,
+  Package,
 } from "lucide-react-native";
 import React, {useMemo, useState} from "react";
 import {ScrollView, StyleSheet, Text, View} from "react-native";
@@ -80,25 +84,57 @@ function DashboardStats({
                           orders,
                           customers,
                           suppliers,
+                          products,
+                          inventory,
                         }: {
   orders: Order[];
   customers: Customer[];
   suppliers: Supplier[];
+  products: any[];
+  inventory: any[];
 }) {
   const [period, setPeriod] = useState("today");
   const {t} = useCommonTranslation()
 
-  const {revenue, orderCount, profit} = useMemo(() => {
+  const {revenue, orderCount, profit, receivable, payback} = useMemo(() => {
     const {start, end} = getPeriodRange(period);
     const filtered = orders.filter(
-      (o) => o.orderDate.getTime() >= start && o.orderDate.getTime() <= end,
+      (o) => o.orderDate.getTime() >= start && o.orderDate.getTime() <= end && o.status !== OrderStatus.CANCELED
     );
-    const revenue = filtered.reduce((sum, o) => sum + o.totalAmount, 0);
-    // Rough profit: revenue minus discounts (discountValue already factored into totalAmount)
-    // For true profit you'd need product cost — using 30% margin estimate as placeholder
-    const profit = revenue * 0.3;
-    return {revenue, orderCount: filtered.length, profit};
+    
+    let revenue = 0;
+    let profit = 0;
+    
+    for (const o of filtered) {
+      revenue += o.totalAmount || 0;
+      profit += o.profitAmount || 0;
+    }
+    
+    let receivable = 0;
+    let payback = 0;
+    for (const o of orders) {
+      const due = o.dueAmount || 0;
+      if (due > 0) receivable += due;
+      if (due < 0) payback += Math.abs(due);
+    }
+    
+    return {revenue, orderCount: filtered.length, profit, receivable, payback};
   }, [orders, period]);
+
+  const inventoryValue = useMemo(() => {
+    const productCostMap = new Map<string, number>();
+    for (const p of products) {
+      productCostMap.set(p.id, p.cost || 0);
+    }
+    let total = 0;
+    for (const inv of inventory) {
+      // WatermelonDB relation properties or raw fallback
+      const productId = inv.productId || (inv._raw && inv._raw.product_id);
+      const cost = productCostMap.get(productId) || 0;
+      total += cost * (inv.quantity || 0);
+    }
+    return total;
+  }, [products, inventory]);
 
   const PERIOD_GROUPS = [
     {
@@ -185,8 +221,22 @@ function DashboardStats({
             <Users size={18} color="#111827"/>
           </View>
           <View>
-            <Text style={[s.statValue, {color: "#111827"}]}>0{/*{customers.length}*/}</Text>
+            <Text style={[s.statValue, {color: "#111827"}]}>
+              ৳{receivable >= 1000 ? `${(receivable / 1000).toFixed(1)}k` : receivable.toFixed(0)}
+            </Text>
             <Text style={[s.statLabel, {color: "#6b7280"}]}>{'Account Receivable'}</Text>
+          </View>
+        </View>
+
+        <View style={[s.statCard,]}>
+          <View style={[s.statIcon, {backgroundColor: "#fee2e2"}]}>
+            <TrendingDown size={18} color="#991b1b"/>
+          </View>
+          <View>
+            <Text style={[s.statValue, {color: "#991b1b"}]}>
+              ৳{payback >= 1000 ? `${(payback / 1000).toFixed(1)}k` : payback.toFixed(0)}
+            </Text>
+            <Text style={[s.statLabel, {color: "#991b1b"}]}>{'Total Pay Back'}</Text>
           </View>
         </View>
 
@@ -199,6 +249,20 @@ function DashboardStats({
             <Text style={[s.statLabel, {color: "#6b7280"}]}>{'Account Payable'}</Text>
           </View>
         </View>
+
+        <View style={[s.statCard,]}>
+          <View style={[s.statIcon, {backgroundColor: "#f59e0b"}]}>
+            <Package size={18} color="#fff"/>
+          </View>
+          <View>
+            <Text style={[s.statValue, {color: "#b45309"}]}>
+              ৳{inventoryValue >= 1000 ? `${(inventoryValue / 1000).toFixed(1)}k` : inventoryValue.toFixed(0)}
+            </Text>
+            <Text style={[s.statLabel, {color: "#b45309"}]}>{'Inventory Value'}</Text>
+          </View>
+        </View>
+        
+        
       </View>
     </ScrollView>
   );
@@ -209,7 +273,7 @@ const EnhancedDashboardStats = withObservables([], () => ({
   orders: database.collections
     .get<Order>("orders")
     .query(Q.where("server_deleted_at", Q.eq(null)))
-    .observe(),
+    .observeWithColumns(['total_amount', 'profit_amount', 'due_amount', 'status', 'order_date']),
   customers: database.collections
     .get<Customer>("customers")
     .query(Q.where("server_deleted_at", Q.eq(null)))
@@ -218,6 +282,14 @@ const EnhancedDashboardStats = withObservables([], () => ({
     .get<Supplier>("suppliers")
     .query(Q.where("server_deleted_at", Q.eq(null)))
     .observe(),
+  products: database.collections
+    .get<Product>("products")
+    .query(Q.where("server_deleted_at", Q.eq(null)))
+    .observeWithColumns(['cost']),
+  inventory: database.collections
+    .get<Inventory>("inventory")
+    .query(Q.where("server_deleted_at", Q.eq(null)))
+    .observeWithColumns(['quantity', 'product_id']),
 }))(DashboardStats);
 
 export default function Dashboard() {
