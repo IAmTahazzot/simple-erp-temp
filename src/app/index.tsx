@@ -165,106 +165,117 @@ function DashboardStats({
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={s.scroll}
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={s.container}>
       {/* ── Revenue Card ── */}
-      <View style={s.revenueCard}>
-        <View style={s.revenueTop}>
-          <Select
-            groups={PERIOD_GROUPS}
-            value={period}
-            onValueChange={setPeriod}
-            triggerStyle={s.selectTrigger}
-          />
+      <View style={s.revenueCardWrapper}>
+        <View style={s.revenueCard}>
+          <View style={s.revenueTop}>
+            <Select
+              groups={PERIOD_GROUPS}
+              value={period}
+              onValueChange={setPeriod}
+              triggerStyle={s.selectTrigger}
+            />
 
+          </View>
+          <Text style={s.revenueLabel}>{t('totalRevenue')}</Text>
+          <Text style={s.revenueAmount}>
+            ৳ {revenue.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+          </Text>
         </View>
-        <Text style={s.revenueLabel}>{t('totalRevenue')}</Text>
-        <Text style={s.revenueAmount}>
-          ৳ {revenue.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}
-        </Text>
       </View>
 
-      {/* ── 2x2 Stat Grid ── */}
-      <View style={s.grid}>
-        <View style={[s.statCard,]}>
-          <View style={[s.statIcon, {backgroundColor: "#0754fc"}]}>
-            <ShoppingCart size={18} color="#fff"/>
-          </View>
-          <View>
-            <Text style={[s.statValue, ]}>{orderCount}</Text>
-            <Text style={[s.statLabel, {color: "#6b7280"}]}>{t('orders')}</Text>
-          </View>
-        </View>
-
-        <View style={[s.statCard, ]}>
-          <View style={[s.statIcon, {backgroundColor: "rgb(0 176 97)"}]}>
-            <TrendingUp size={18} color="#fff"/>
-          </View>
-          <View>
-            <Text style={[s.statValue,]}>
-              ৳
-              {profit >= 1000
-                ? `${(profit / 1000).toFixed(1)}k`
-                : profit.toFixed(0)}
-            </Text>
-            <Text style={[s.statLabel, {color: "#6b7280"}]}>{t('profit')}</Text>
+      <ScrollView
+        contentContainerStyle={s.scroll}
+        showsVerticalScrollIndicator={false}
+        style={{
+          marginBottom: 70,
+        }}
+      >
+        <Text style={s.sectionTitle}>Inventory Inquiry</Text>
+        <View style={s.grid}>
+          <View style={[s.statCard,]}>
+            <View style={[s.statIcon, {backgroundColor: "#f59e0b"}]}>
+              <Package size={18} color="#fff"/>
+            </View>
+            <View>
+              <Text style={[s.statValue, {color: "#b45309"}]}>
+                ৳{inventoryValue >= 1000 ? `${(inventoryValue / 1000).toFixed(1)}k` : inventoryValue.toFixed(0)}
+              </Text>
+              <Text style={[s.statLabel, {color: "#b45309"}]}>{'Inventory Value'}</Text>
+            </View>
           </View>
         </View>
 
-        <View style={[s.statCard,]}>
-          <View style={[s.statIcon, {backgroundColor: "#f3f4f6"}]}>
-            <Users size={18} color="#111827"/>
+        <Text style={s.sectionTitle}>Income</Text>
+        <View style={s.grid}>
+          <View style={[s.statCard,]}>
+            <View style={[s.statIcon, {backgroundColor: "#0754fc"}]}>
+              <ShoppingCart size={18} color="#fff"/>
+            </View>
+            <View>
+              <Text style={[s.statValue, ]}>{orderCount}</Text>
+              <Text style={[s.statLabel, {color: "#6b7280"}]}>{t('orders')}</Text>
+            </View>
           </View>
-          <View>
-            <Text style={[s.statValue, {color: "#111827"}]}>
-              ৳{receivable >= 1000 ? `${(receivable / 1000).toFixed(1)}k` : receivable.toFixed(0)}
-            </Text>
-            <Text style={[s.statLabel, {color: "#6b7280"}]}>{'Account Receivable'}</Text>
+
+          <View style={[s.statCard, ]}>
+            <View style={[s.statIcon, {backgroundColor: "rgb(0 176 97)"}]}>
+              <TrendingUp size={18} color="#fff"/>
+            </View>
+            <View>
+              <Text style={[s.statValue,]}>
+                ৳
+                {profit >= 1000
+                  ? `${(profit / 1000).toFixed(1)}k`
+                  : profit.toFixed(0)}
+              </Text>
+              <Text style={[s.statLabel, {color: "#6b7280"}]}>{t('profit')}</Text>
+            </View>
           </View>
         </View>
 
-        <View style={[s.statCard,]}>
-          <View style={[s.statIcon, {backgroundColor: "#fee2e2"}]}>
-            <TrendingDown size={18} color="#991b1b"/>
+        <Text style={s.sectionTitle}>Others</Text>
+        <View style={s.grid}>
+          <View style={[s.statCard,]}>
+            <View style={[s.statIcon, {backgroundColor: "#f3f4f6"}]}>
+              <Users size={18} color="#111827"/>
+            </View>
+            <View>
+              <Text style={[s.statValue, {color: "#111827"}]}>
+                ৳{receivable >= 1000 ? `${(receivable / 1000).toFixed(1)}k` : receivable.toFixed(0)}
+              </Text>
+              <Text style={[s.statLabel, {color: "#6b7280"}]}>{'Account Receivable'}</Text>
+            </View>
           </View>
-          <View>
-            <Text style={[s.statValue, {color: "#991b1b"}]}>
-              ৳{payback >= 1000 ? `${(payback / 1000).toFixed(1)}k` : payback.toFixed(0)}
-            </Text>
-            <Text style={[s.statLabel, {color: "#991b1b"}]}>{'Total Pay Back'}</Text>
-          </View>
-        </View>
 
-        <View style={[s.statCard,]}>
-          <View style={[s.statIcon, {backgroundColor: "#f3f4f6"}]}>
-            <Users size={18} color="#111827"/>
+          <View style={[s.statCard,]}>
+            <View style={[s.statIcon, {backgroundColor: "#fee2e2"}]}>
+              <TrendingDown size={18} color="#991b1b"/>
+            </View>
+            <View>
+              <Text style={[s.statValue, {color: "#991b1b"}]}>
+                ৳{payback >= 1000 ? `${(payback / 1000).toFixed(1)}k` : payback.toFixed(0)}
+              </Text>
+              <Text style={[s.statLabel, {color: "#991b1b"}]}>{'Total Pay Back'}</Text>
+            </View>
           </View>
-          <View>
-            <Text style={[s.statValue, {color: "#111827"}]}>0{/*{customers.length}*/}</Text>
-            <Text style={[s.statLabel, {color: "#6b7280"}]}>{'Account Payable'}</Text>
-          </View>
-        </View>
 
-        <View style={[s.statCard,]}>
-          <View style={[s.statIcon, {backgroundColor: "#f59e0b"}]}>
-            <Package size={18} color="#fff"/>
-          </View>
-          <View>
-            <Text style={[s.statValue, {color: "#b45309"}]}>
-              ৳{inventoryValue >= 1000 ? `${(inventoryValue / 1000).toFixed(1)}k` : inventoryValue.toFixed(0)}
-            </Text>
-            <Text style={[s.statLabel, {color: "#b45309"}]}>{'Inventory Value'}</Text>
+          <View style={[s.statCard,]}>
+            <View style={[s.statIcon, {backgroundColor: "#f3f4f6"}]}>
+              <Users size={18} color="#111827"/>
+            </View>
+            <View>
+              <Text style={[s.statValue, {color: "#111827"}]}>0{/*{customers.length}*/}</Text>
+              <Text style={[s.statLabel, {color: "#6b7280"}]}>{'Account Payable'}</Text>
+            </View>
           </View>
         </View>
-        
-        
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -303,9 +314,24 @@ export default function Dashboard() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const s = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  revenueCardWrapper: {
+    padding: 16,
+    paddingBottom: 0,
+  },
   scroll: {
     padding: 16,
-    gap: 16,
+    gap: 8,
+  },
+  sectionTitle: {
+    fontSize: 15,
+    fontFamily: "InterSemiBold",
+    color: "#374151",
+    paddingTop: 8,
+    paddingBottom: 4,
+    fontWeight: "600",
   },
   revenueCard: {
     backgroundColor: "#FFFFFF",
