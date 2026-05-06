@@ -1,4 +1,4 @@
-// app/index.tsx
+// app/[customerId].tsx
 import {BaseLayout} from "@/components/core/BaseLayout";
 import {MainHeader} from "@/components/core/MainHeader";
 import {Select} from "@/components/ui/Select";
@@ -185,9 +185,7 @@ function DashboardStats({
             <Users size={18} color="#111827"/>
           </View>
           <View>
-            <Text style={[s.statValue, {color: "#111827"}]}>
-              {customers.length}
-            </Text>
+            <Text style={[s.statValue, {color: "#111827"}]}>0{/*{customers.length}*/}</Text>
             <Text style={[s.statLabel, {color: "#6b7280"}]}>{'Account Receivable'}</Text>
           </View>
         </View>
@@ -197,9 +195,7 @@ function DashboardStats({
             <Users size={18} color="#111827"/>
           </View>
           <View>
-            <Text style={[s.statValue, {color: "#111827"}]}>
-              {customers.length}
-            </Text>
+            <Text style={[s.statValue, {color: "#111827"}]}>0{/*{customers.length}*/}</Text>
             <Text style={[s.statLabel, {color: "#6b7280"}]}>{'Account Payable'}</Text>
           </View>
         </View>

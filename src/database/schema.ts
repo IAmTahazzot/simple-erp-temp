@@ -1,7 +1,8 @@
+// database/schema.ts
 import { appSchema, tableSchema } from '@nozbe/watermelondb'
 
 export default appSchema({
-  version: 14, // bump version (important)
+  version: 15, // bumped from 14 — added payment_status to orders
   tables: [
     tableSchema({
       name: 'users',
@@ -14,7 +15,7 @@ export default appSchema({
         { name: 'updated_at', type: 'number' },
         { name: 'last_modified', type: 'number', isOptional: true },
         { name: 'server_deleted_at', type: 'number', isOptional: true },
-      ]
+      ],
     }),
 
     tableSchema({
@@ -28,7 +29,7 @@ export default appSchema({
         { name: 'updated_at', type: 'number' },
         { name: 'last_modified', type: 'number', isOptional: true },
         { name: 'server_deleted_at', type: 'number', isOptional: true },
-      ]
+      ],
     }),
 
     tableSchema({
@@ -43,7 +44,7 @@ export default appSchema({
         { name: 'updated_at', type: 'number' },
         { name: 'last_modified', type: 'number', isOptional: true },
         { name: 'server_deleted_at', type: 'number', isOptional: true },
-      ]
+      ],
     }),
 
     tableSchema({
@@ -58,7 +59,7 @@ export default appSchema({
         { name: 'updated_at', type: 'number' },
         { name: 'last_modified', type: 'number', isOptional: true },
         { name: 'server_deleted_at', type: 'number', isOptional: true },
-      ]
+      ],
     }),
 
     tableSchema({
@@ -71,7 +72,7 @@ export default appSchema({
         { name: 'updated_at', type: 'number' },
         { name: 'last_modified', type: 'number', isOptional: true },
         { name: 'server_deleted_at', type: 'number', isOptional: true },
-      ]
+      ],
     }),
 
     tableSchema({
@@ -84,7 +85,7 @@ export default appSchema({
         { name: 'updated_at', type: 'number' },
         { name: 'last_modified', type: 'number', isOptional: true },
         { name: 'server_deleted_at', type: 'number', isOptional: true },
-      ]
+      ],
     }),
 
     tableSchema({
@@ -93,8 +94,8 @@ export default appSchema({
         { name: 'customer_id', type: 'string', isIndexed: true },
         { name: 'user_id', type: 'string', isIndexed: true },
         { name: 'order_date', type: 'number' },
-        { name: 'status', type: 'string' },
-        { name: 'payment_status', type: 'string' },
+        { name: 'status', type: 'string' },           // active | canceled | completed
+        { name: 'payment_status', type: 'string' },   // unpaid | partially_paid | paid | refunded | partially_refunded
         { name: 'total_amount', type: 'number' },
         { name: 'due_amount', type: 'number', isOptional: true },
         { name: 'profit_amount', type: 'number', isOptional: true },
@@ -104,7 +105,7 @@ export default appSchema({
         { name: 'updated_at', type: 'number' },
         { name: 'last_modified', type: 'number', isOptional: true },
         { name: 'server_deleted_at', type: 'number', isOptional: true },
-      ]
+      ],
     }),
 
     tableSchema({
@@ -118,7 +119,7 @@ export default appSchema({
         { name: 'updated_at', type: 'number' },
         { name: 'last_modified', type: 'number', isOptional: true },
         { name: 'server_deleted_at', type: 'number', isOptional: true },
-      ]
+      ],
     }),
 
     tableSchema({
@@ -135,7 +136,7 @@ export default appSchema({
         { name: 'updated_at', type: 'number' },
         { name: 'last_modified', type: 'number', isOptional: true },
         { name: 'server_deleted_at', type: 'number', isOptional: true },
-      ]
+      ],
     }),
 
     tableSchema({
@@ -149,10 +150,9 @@ export default appSchema({
         { name: 'updated_at', type: 'number' },
         { name: 'last_modified', type: 'number', isOptional: true },
         { name: 'server_deleted_at', type: 'number', isOptional: true },
-      ]
+      ],
     }),
 
-    // ✅ UPDATED TABLE
     tableSchema({
       name: 'transactions',
       columns: [
@@ -165,7 +165,7 @@ export default appSchema({
         { name: 'updated_at', type: 'number' },
         { name: 'last_modified', type: 'number', isOptional: true },
         { name: 'server_deleted_at', type: 'number', isOptional: true },
-      ]
-    })
-  ]
+      ],
+    }),
+  ],
 })

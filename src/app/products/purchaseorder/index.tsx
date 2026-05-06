@@ -1,4 +1,4 @@
-// app/purchase_orders/index.tsx
+// app/purchase_orders/[customerId].tsx
 import React, {useCallback, useMemo, useState} from 'react'
 import {View, Text, FlatList, TextInput, Pressable, ActivityIndicator, StyleSheet} from 'react-native'
 import {database} from '@/database'

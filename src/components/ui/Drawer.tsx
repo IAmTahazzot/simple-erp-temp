@@ -132,6 +132,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 10,
     minHeight: 200,
     paddingBottom: 40,
+    marginHorizontal: 10,
   },
   handleContainer: {
     alignItems: 'center',

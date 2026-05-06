@@ -1,123 +1,141 @@
-// app/orders/index.tsx
-import React, {useCallback, useMemo, useState} from 'react'
-import {View, Text, FlatList, TextInput, Pressable, ActivityIndicator, StyleSheet} from 'react-native'
-import {database} from '@/database'
+// app/orders/[customerId].tsx
+import React, { useMemo, useState } from 'react'
+import {
+  View, Text, FlatList, TextInput, Pressable,
+  ActivityIndicator, StyleSheet,
+} from 'react-native'
+import { database } from '@/database'
 import Order from '@/database/models/Order'
-import {withObservables} from '@nozbe/watermelondb/react'
-import {Q} from '@nozbe/watermelondb'
-import {Search as SearchIcon} from 'lucide-react-native'
-import {useRouter} from 'expo-router'
-import Customer from '@/database/models/Customer';
+import Customer from '@/database/models/Customer'
+import { withObservables } from '@nozbe/watermelondb/react'
+import { Q } from '@nozbe/watermelondb'
+import { Search as SearchIcon, ChevronRight } from 'lucide-react-native'
+import { useRouter } from 'expo-router'
 
-function fuzzyScore(name: string, query: string): number {
-  if (!query) return 100
-  const n = name.toLowerCase(), q = query.toLowerCase()
-  if (n === q) return 100
-  if (n.startsWith(q)) return 90
-  if (n.includes(q)) return 80
-  let qi = 0
-  for (let i = 0; i < n.length && qi < q.length; i++) if (n[i] === q[qi]) qi++
-  return qi === q.length ? 50 : 0
+// ─── Types ────────────────────────────────────────────────────────────────────
+type CustomerWithOrders = {
+  customer: Customer
+  orders: Order[]
+  totalDue: number
+  orderCount: number
 }
 
-const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  pending: {bg: '#fef3c7', text: '#92400e'},
-  partial: {bg: '#dbeafe', text: '#1e40af'},
-  paid: {bg: '#d1fae5', text: '#065f46'},
-  cancelled: {bg: '#fee2e2', text: '#991b1b'},
-}
-
-// Each order item needs customer name — we enhance with withObservables
-const OrderItemRow = withObservables(['order'], ({order}: { order: Order }) => ({
-  order: order.observe(),
-  customer: order.customer.observe(),
-  // customer: database.get<Customer>('customers').findAndObserve(order.customerId)
-}))(({order, customer, onPress}: any) => {
-  const colors = STATUS_COLORS[order.status] ?? STATUS_COLORS.pending
-
+// ─── Customer row ─────────────────────────────────────────────────────────────
+function CustomerRow({ item, onPress }: { item: CustomerWithOrders; onPress: () => void }) {
   return (
     <Pressable
       onPress={onPress}
-      style={({pressed}) => [s.row, pressed && {backgroundColor: '#f9fafb'}]}>
-      <View style={{flex: 1}}>
-        <View style={{flexDirection: 'row', alignItems: 'center', gap: 6}}>
-
-          <Text style={[
-            s.rowName,
-            customer?._raw.server_deleted_at && {
-              textDecorationLine: 'line-through',
-              opacity: .4
-            }
-          ]}>{customer?.name ?? 'Unknown Customer'}</Text>
-
-          <Text style={{ opacity: 0.4 }}>{customer?._raw.server_deleted_at && ' (deleted customer)'}</Text>
-        </View>
-        <Text style={s.rowDate}>{new Date(order.orderDate).toLocaleDateString()}</Text>
+      style={({ pressed }) => [s.row, pressed && { backgroundColor: '#f9fafb' }]}>
+      <View style={s.avatar}>
+        <Text style={s.avatarText}>{item.customer.name.charAt(0).toUpperCase()}</Text>
       </View>
-      <View style={{alignItems: 'flex-end', gap: 6}}>
-        <Text style={s.rowAmount}>৳{order.totalAmount.toFixed(2)}</Text>
-        <View style={[s.badge, {backgroundColor: colors.bg}]}>
-          <Text style={[s.badgeText, {color: colors.text}]}>{order.status}</Text>
-        </View>
+      <View style={{ flex: 1, marginLeft: 12 }}>
+        <Text style={s.rowName}>{item.customer.name}</Text>
+        <Text style={s.rowSub}>{item.orderCount} order{item.orderCount !== 1 ? 's' : ''}</Text>
       </View>
+      <View style={{ alignItems: 'flex-end', gap: 4 }}>
+        {/*{item.totalDue > 0 && (*/}
+        {/*  <Text style={s.dueText}>Due ৳{item.totalDue.toFixed(2)}</Text>*/}
+        {/*)}*/}
+      </View>
+      <ChevronRight size={18} color="#9ca3af" style={{ marginLeft: 8 }} />
     </Pressable>
   )
-})
+}
 
-function Orders({orders}: { orders: Order[] }) {
+// ─── Main Component ───────────────────────────────────────────────────────────
+function OrdersIndex({ orders, customers }: { orders: Order[]; customers: Customer[] }) {
   const router = useRouter()
   const [query, setQuery] = useState('')
 
-  // We search by order id as proxy — customer name search requires denormalized data
-  // so we filter by status keyword or date string for simplicity
-  const filtered = useMemo(() => {
-    if (!query.trim()) return orders
-    const q = query.trim().toLowerCase()
-    return orders.filter((o) =>
-      o.status.includes(q) ||
-      new Date(o.orderDate).toLocaleDateString().includes(q) ||
-      o.totalAmount.toString().includes(q)
-    )
-  }, [orders, query])
+  // Group orders by customer
+  const customerGroups = useMemo<CustomerWithOrders[]>(() => {
+    const customerMap = new Map<string, Customer>()
+    customers.forEach(c => customerMap.set(c.id, c))
 
-  const renderItem = useCallback(({item}: { item: Order }) => (
-    <OrderItemRow
-      order={item}
-      onPress={() => router.push({pathname: '/orders/[id]', params: {id: item.id}})}
-    />
-  ), [])
+    const grouped = new Map<string, { orders: Order[]; totalDue: number }>()
+
+    for (const order of orders) {
+      const existing = grouped.get(order.customerId) ?? { orders: [], totalDue: 0 }
+      existing.orders.push(order)
+      existing.totalDue += Math.max(0, order.dueAmount ?? 0)
+      grouped.set(order.customerId, existing)
+    }
+
+    const result: CustomerWithOrders[] = []
+    grouped.forEach((data, customerId) => {
+      const customer = customerMap.get(customerId)
+      if (!customer) return
+      result.push({
+        customer,
+        orders: data.orders,
+        totalDue: data.totalDue,
+        orderCount: data.orders.length,
+      })
+    })
+
+    // Sort by most due first, then alphabetically
+    return result.sort((a, b) => b.totalDue - a.totalDue || a.customer.name.localeCompare(b.customer.name))
+  }, [orders, customers])
+
+  // Filter by customer name
+  const filtered = useMemo(() => {
+    if (!query.trim()) return customerGroups
+    const q = query.trim().toLowerCase()
+    return customerGroups.filter(g =>
+      g.customer.name.toLowerCase().includes(q)
+    )
+  }, [customerGroups, query])
+
+  const totalDueAll = useMemo(() => customerGroups.reduce((sum, g) => sum + g.totalDue, 0), [customerGroups])
 
   return (
-    <View style={{flex: 1}}>
+    <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+      {/* Summary bar */}
+      {totalDueAll > 0 && (
+        <View style={s.summaryBar}>
+          <Text style={s.summaryText}>Total Due Across All Orders</Text>
+          <Text style={s.summaryAmount}>৳{totalDueAll.toFixed(2)}</Text>
+        </View>
+      )}
+
+      {/* Search */}
       <View style={s.searchBar}>
-        <SearchIcon size={20} color={'#8c8c8c'}/>
+        <SearchIcon size={20} color="#8c8c8c" />
         <TextInput
-          placeholder={'Search by status, date, amount...'}
-          placeholderTextColor={'#9f9f9f'}
+          placeholder="Search customers..."
+          placeholderTextColor="#9f9f9f"
           value={query}
           onChangeText={setQuery}
-          style={{fontFamily: 'InterRegular', fontSize: 15, color: '#333', flex: 1}}
+          style={{ fontFamily: 'InterRegular', fontSize: 15, color: '#333', flex: 1 }}
         />
       </View>
+
       <FlatList
         data={filtered}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        windowSize={5}
-        maxToRenderPerBatch={10}
-        initialNumToRender={15}
-        removeClippedSubviews={true}
+        keyExtractor={(item) => item.customer.id}
+        renderItem={({ item }) => (
+          <CustomerRow
+            item={item}
+            onPress={() =>
+              router.push({
+                pathname: '/orders/customerOrders/[customerId]',
+                params: { customerId: item.customer.id },
+              })
+            }
+          />
+        )}
         ListEmptyComponent={
-          <Text style={s.empty}>No orders found</Text>
+          <Text style={s.empty}>No customers with orders found</Text>
         }
       />
     </View>
   )
 }
 
-function OrdersLoader({orders}: { orders?: Order[] }) {
-  if (!orders) return <ActivityIndicator style={{flex: 1}} size={'large'}/>
-  return <Orders orders={orders}/>
+function OrdersLoader({ orders, customers }: { orders?: Order[]; customers?: Customer[] }) {
+  if (!orders || !customers) return <ActivityIndicator style={{ flex: 1 }} size="large" />
+  return <OrdersIndex orders={orders} customers={customers} />
 }
 
 export default withObservables([], () => ({
@@ -125,21 +143,37 @@ export default withObservables([], () => ({
     .get<Order>('orders')
     .query(Q.where('server_deleted_at', Q.eq(null)), Q.sortBy('created_at', 'desc'))
     .observe(),
+  customers: database.collections
+    .get<Customer>('customers')
+    .query(Q.where('server_deleted_at', Q.eq(null)), Q.sortBy('name', 'asc'))
+    .observe(),
 }))(OrdersLoader)
 
 const s = StyleSheet.create({
+  summaryBar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 12 
+  },
+  summaryText: { fontSize: 13, fontFamily: 'InterRegular', color: '#2f2f2f' },
+  summaryAmount: { fontSize: 20, fontFamily: 'InterBold', color: '#d71717', borderWidth: 1, padding: 2, borderColor: '#ff5a5a' , borderRadius: 6},
   searchBar: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#efefef', borderRadius: 12, paddingHorizontal: 12, margin: 12,
+    backgroundColor: '#efefef', borderRadius: 12,
+    paddingHorizontal: 12, margin: 12,
   },
   row: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14,
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 16, paddingVertical: 14,
     borderBottomWidth: 1, borderBottomColor: '#f0f0f0',
+    backgroundColor: '#fff',
   },
-  rowName: {fontSize: 15, fontFamily: 'InterBold', color: '#111'},
-  rowDate: {fontSize: 13, color: '#6b7280', fontFamily: 'InterRegular', marginTop: 2},
-  rowAmount: {fontSize: 15, fontFamily: 'InterBold', color: '#111'},
-  badge: {paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20},
-  badgeText: {fontSize: 12, fontFamily: 'InterMedium', textTransform: 'capitalize'},
-  empty: {textAlign: 'center', marginTop: 40, color: '#9f9f9f', fontFamily: 'InterRegular'},
+  avatar: {
+    width: 42, height: 42, borderRadius: 21,
+    backgroundColor: '#111827', alignItems: 'center', justifyContent: 'center',
+  },
+  avatarText: { color: '#fff', fontFamily: 'InterBold', fontSize: 17 },
+  rowName: { fontSize: 15, fontFamily: 'InterBold', color: '#111' },
+  rowSub: { fontSize: 13, color: '#6b7280', fontFamily: 'InterRegular', marginTop: 2 },
+  dueText: { fontSize: 13, fontFamily: 'InterMedium', color: '#dc2626' },
+  empty: { textAlign: 'center', marginTop: 40, color: '#9f9f9f', fontFamily: 'InterRegular' },
 })
