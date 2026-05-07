@@ -16,6 +16,7 @@ import {
   useFonts,
 } from "@expo-google-fonts/inter";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { useUnknownSupplier } from '@/hooks/use-unknown-supplier'
 
 export default function RootLayout() {
   const { isLoggedIn, checkAuth, isLoading } = useAuthStore();
@@ -35,6 +36,7 @@ export default function RootLayout() {
   });
 
   const [isAppReady, setIsAppReady] = useState(false);
+  const { isLoading: supplierChecking, unknownSupplier } = useUnknownSupplier()
 
   useEffect(() => {
     let active = true;
@@ -57,14 +59,13 @@ export default function RootLayout() {
       active = false;
     };
   }, [checkAuth]);
-
   useEffect(() => {
     if (i18nReady && !isLoading && !isSyncing) {
       setIsAppReady(true);
     }
   }, [i18nReady, isLoading, isSyncing]);
 
-  if (!isAppReady) {
+  if (!isAppReady || supplierChecking) {
     return (
       <View style={{ flex: 1 }}>
         <View

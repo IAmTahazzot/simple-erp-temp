@@ -233,7 +233,6 @@ function DashboardStats({
       >
         <Text style={s.sectionTitle}>Income</Text>
         <View style={s.grid}>
-
           <View style={[s.statCard,]}>
             <View style={[s.statIcon, {backgroundColor: "#f59e0b"}]}>
               <Package size={18} color="#fff"/>
@@ -245,7 +244,6 @@ function DashboardStats({
               <Text style={[s.statLabel, {color: "#b45309"}]}>{'Inventory Value'}</Text>
             </View>
           </View>
-          
           <View style={[s.statCard,]}>
             <View style={[s.statIcon, {backgroundColor: "rgb(0 176 97)"}]}>
               <TrendingUp size={18} color="#fff"/>

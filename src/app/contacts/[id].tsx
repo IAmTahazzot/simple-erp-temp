@@ -13,6 +13,7 @@ import {deleteProduct} from '@/features/products/functions';
 import {deleteContact} from '@/features/contacts/functions';
 import {useOnline} from '@/hooks/use-online';
 import {useCommonTranslation} from '@/i18n/useTypedTranslation';
+import {UNKNOWN_SUPPLIER_NAME} from '@/hooks/use-unknown-supplier'
 
 // ─── Shared ───────────────────────────────────────────────────────────────────
 
@@ -140,10 +141,16 @@ function SupplierDetails({contact}: { contact: Supplier }) {
           <ArrowLeft size={22} color="#111"/>
         </Pressable>
         <Text style={styles.supplierHeaderTitle}>Supplier</Text>
-        <Pressable onPress={() => setEditVisible(true)} style={styles.supplierEditBtn}>
-          <Pencil size={15} color="#111"/>
-          <Text style={styles.supplierEditBtnText}>Edit</Text>
-        </Pressable>
+        {
+          contact.name === UNKNOWN_SUPPLIER_NAME ? (
+            <View style={{width: 30}}></View>
+          ) : (
+            <Pressable onPress={() => setEditVisible(true)} style={styles.supplierEditBtn}>
+              <Pencil size={15} color="#111"/>
+              <Text style={styles.supplierEditBtnText}>Edit</Text>
+            </Pressable>
+          )
+        }
       </View>
 
       <ScrollView contentContainerStyle={{paddingBottom: 40}}>
@@ -156,15 +163,19 @@ function SupplierDetails({contact}: { contact: Supplier }) {
           {contact.contactName && (
             <Text style={styles.supplierContact}>via {contact.contactName}</Text>
           )}
-          <Button size={'icon'} rightIcon={<Phone size={25} color={'#000'} />} style={{
-            backgroundColor: '#fff',
-            alignSelf: 'center',
-            marginTop: 10,
-          }}
-                  onPress={() => {
-                    Linking.openURL(`tel:${contact.phone}`)
-                  }}
-          />
+          {
+            contact.name !== UNKNOWN_SUPPLIER_NAME && (
+              <Button size={'icon'} rightIcon={<Phone size={25} color={'#000'}/>} style={{
+                backgroundColor: '#fff',
+                alignSelf: 'center',
+                marginTop: 10,
+              }}
+                      onPress={() => {
+                        Linking.openURL(`tel:${contact.phone}`)
+                      }}
+              />
+            )
+          }
         </View>
 
         {/* Details */}
@@ -180,13 +191,17 @@ function SupplierDetails({contact}: { contact: Supplier }) {
             <Text style={styles.emptyNote}>No details added yet.</Text>
           )}
 
-          <Button title={t("delete")}
-                  variant={'destructive'}
-                  style={{marginTop: 20, marginLeft: 'auto'}}
-                  onPress={() => {
-                    setShouldDelete(true)
-                  }}
-          />
+          {
+            contact.name !== UNKNOWN_SUPPLIER_NAME && (
+              <Button title={t("delete")}
+                      variant={'destructive'}
+                      style={{marginTop: 20, marginLeft: 'auto'}}
+                      onPress={() => {
+                        setShouldDelete(true)
+                      }}
+              />
+            )
+          }
 
           <AlertDialog visible={shouldDelete} title={'Delete ' + contact.name} buttons={[
             {
@@ -291,7 +306,7 @@ const styles = StyleSheet.create({
 
   // Supplier
   supplierHeader: {
-    backgroundColor: '#fff', paddingHorizontal: 16, paddingTop: 52, paddingBottom: 12,
+    backgroundColor: '#fff', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
   },
