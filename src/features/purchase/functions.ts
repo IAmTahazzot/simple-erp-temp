@@ -7,7 +7,7 @@ import Inventory from '@/database/models/Inventory'
 import TransactionModel from '@/database/models/Transaction'
 import { supabase } from '@/services/supabase'
 import { ToastAndroid, Platform } from 'react-native'
-import {Q} from '@nozbe/watermelondb'
+import { Q } from '@nozbe/watermelondb'
 
 export type PurchaseOrderLine = {
   productId: string
@@ -16,7 +16,7 @@ export type PurchaseOrderLine = {
   unitPrice: number
 }
 
-// ”€”€”€ Toast helper ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
+// ─── Toast helper ────────────────────────────────────────────────────────────
 function toastSupabaseError(action: string) {
   const msg = `Supabase sync failed: ${action}`
   if (Platform.OS === 'android') {
@@ -24,24 +24,26 @@ function toastSupabaseError(action: string) {
   }
 }
 
-// ”€”€”€ Payment status helper ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
+// ─── Payment status helper ───────────────────────────────────────────────────
 function computePaymentStatus(totalAmount: number, paidAmount: number): PurchasePaymentStatus {
   if (paidAmount <= 0) return PurchasePaymentStatus.UNPAID
   if (paidAmount >= totalAmount) return PurchasePaymentStatus.PAID
   return PurchasePaymentStatus.PARTIALLY_PAID
 }
 
-// ”€”€”€ Compute due amount ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
+// ─── Compute due amount ──────────────────────────────────────────────────────
 // due = totalAmount - paidAmount (can be negative if overpaid after refund)
 function computeDue(totalAmount: number, paidAmount: number): number {
   return totalAmount - paidAmount
 }
 
-// "€"€"€ WAC Recalculation (MUST be called inside an existing database.write block) "€"€"€"€
+// ─── WAC Recalculation (MUST be called inside an existing database.write block) ─
 // Rebuilds products.cost from the full purchase_order_items history — never incremental.
+// EXCLUDES items belonging to CANCELED orders so they don't skew the average.
 // Signed quantities: positive = purchase rows, negative = refund rows.
 // Refund rows naturally reduce both totalQty and totalValue, keeping WAC accurate.
 async function recalculateProductWAC(productId: string): Promise<void> {
+  // Fetch all non-deleted purchase order items for this product
   const items = await database.get<PurchaseOrderItem>('purchase_order_items')
     .query(
       Q.where('product_id', productId),
@@ -49,9 +51,33 @@ async function recalculateProductWAC(productId: string): Promise<void> {
     )
     .fetch()
 
+  if (items.length === 0) {
+    // No items at all — reset cost to 0
+    const product = await database.get<Product>('products').find(productId)
+    await product.update((p) => { p.cost = 0 })
+    return
+  }
+
+  // Fetch the parent orders in one batch to filter out canceled ones
+  const orderIds = [...new Set(items.map(i => i.purchaseOrderId))]
+  const orders = await database.get<PurchaseOrder>('purchase_orders')
+    .query(
+      Q.where('id', Q.oneOf(orderIds)),
+      Q.where('server_deleted_at', Q.eq(null)),
+    )
+    .fetch()
+
+  const activeOrderIds = new Set(
+    orders
+      .filter(o => o.status !== PurchaseOrderStatus.CANCELED)
+      .map(o => o.id)
+  )
+
   let totalQty = 0
   let totalValue = 0
   for (const item of items) {
+    // Skip items from canceled orders
+    if (!activeOrderIds.has(item.purchaseOrderId)) continue
     totalQty += item.quantity
     totalValue += item.quantity * item.unitPrice
   }
@@ -65,7 +91,7 @@ async function recalculateProductWAC(productId: string): Promise<void> {
   await product.update((p) => { p.cost = newCost })
 }
 
-// Create Purchase Order 
+// ─── Create Purchase Order ───────────────────────────────────────────────────
 export const createPurchaseOrder = async (params: {
   supplierId: string
   lines: PurchaseOrderLine[]
@@ -107,7 +133,7 @@ export const createPurchaseOrder = async (params: {
       })
     ))
 
-    // 3. ADD inventory (Supplier order received -> more inventory)
+    // 3. Add inventory (Supplier order received -> more inventory)
     for (const line of lines) {
       const invRecords = await database.get<Inventory>('inventory').query().fetch()
       const inv = invRecords.find(i => i.productId === line.productId)
@@ -115,7 +141,7 @@ export const createPurchaseOrder = async (params: {
         await inv.update((r) => {
           r.quantity = r.quantity + line.quantity
         })
-      } // Might want to create inventory if it doesn't exist, but typically user sets up product first
+      }
     }
 
     // 4. Recalculate Weighted Average Cost for each affected product
@@ -139,7 +165,7 @@ export const createPurchaseOrder = async (params: {
     return { order, orderItems, transaction }
   })
 
-  // ”€”€”€ Supabase sync (best-effort) ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
+  // ─── Supabase sync (best-effort) ─────────────────────────────────────────
   if (isOnline) {
     try {
       await supabase.from('purchase_orders').insert({
@@ -191,7 +217,7 @@ export const createPurchaseOrder = async (params: {
   return order
 }
 
-// ”€”€”€ Add Payment ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
+// ─── Add Payment ─────────────────────────────────────────────────────────────
 export const addPurchasePayment = async (
   order: PurchaseOrder,
   amount: number,
@@ -241,12 +267,14 @@ export const addPurchasePayment = async (
   return tx
 }
 
-// ”€”€”€ Cancel Order ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
+// ─── Cancel Order ─────────────────────────────────────────────────────────────
 export const cancelPurchaseOrder = async (order: PurchaseOrder, isOnline: boolean) => {
   const now = Date.now()
 
   // Fetch order items to revert inventory
   const items = await order.items.fetch()
+  // Collect unique product IDs for WAC recalc after cancellation
+  const uniqueProductIds = [...new Set(items.map(i => i.productId))]
 
   await database.write(async () => {
     // Revert inventory for each item (original purchase added inventory, so we MUST deduct)
@@ -268,6 +296,13 @@ export const cancelPurchaseOrder = async (order: PurchaseOrder, isOnline: boolea
       o.totalAmount = 0
       o.dueAmount = 0
     })
+
+    // Recalculate WAC — canceled order items must no longer influence cost
+    // recalculateProductWAC reads order.status which is now CANCELED, so these
+    // items will be excluded from the WAC calculation automatically.
+    for (const productId of uniqueProductIds) {
+      await recalculateProductWAC(productId)
+    }
   })
 
   if (isOnline) {
@@ -285,7 +320,7 @@ export const cancelPurchaseOrder = async (order: PurchaseOrder, isOnline: boolea
   }
 }
 
-// ”€”€”€ Refund Order ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
+// ─── Refund Order ─────────────────────────────────────────────────────────────
 export type RefundLine = {
   productId: string
   productName: string
@@ -392,7 +427,7 @@ export const refundPurchaseOrder = async (
   }
 }
 
-// ”€”€”€ Issue Refund Payment (Receive cash back from supplier) ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
+// ─── Issue Refund Payment (Receive cash back from supplier) ──────────────────
 export const issuePurchaseRefundPayment = async (
   order: PurchaseOrder,
   amountToReturn: number,
@@ -473,7 +508,7 @@ export const issuePurchaseRefundPayment = async (
   return tx
 }
 
-// ”€”€”€ Edit Order ”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€”€
+// ─── Edit Order ───────────────────────────────────────────────────────────────
 export type EditPurchaseOrderParams = {
   items: { id: string; quantity: number; unitPrice: number }[]
   discountType: 'flat' | 'percent' | null
@@ -517,7 +552,6 @@ export const editPurchaseOrder = async (order: PurchaseOrder, params: EditPurcha
       })
 
       // Adjust inventory by delta.
-      // Customer orders: delta > 0 (more sold) -> deduct, delta < 0 -> add.
       // Purchase orders: delta > 0 (more received) -> ADD to inventory. delta < 0 (less received) -> DEDUCT.
       const delta = meta.newQty - meta.oldQty
       if (delta !== 0) {
