@@ -1,21 +1,18 @@
-// app/[customerId].tsx
 import {BaseLayout} from "@/components/core/BaseLayout";
 import {MainHeader} from "@/components/core/MainHeader";
 import {Select} from "@/components/ui/Select";
 import {database} from "@/database";
 import Customer from "@/database/models/Customer";
-import Order, { OrderStatus } from "@/database/models/Order";
+import Order, {OrderStatus} from "@/database/models/Order";
 import Supplier from "@/database/models/Supplier";
 import Product from "@/database/models/Product";
 import Inventory from "@/database/models/Inventory";
 import {Q} from "@nozbe/watermelondb";
 import {withObservables} from "@nozbe/watermelondb/react";
 import {
-  Building2,
   ShoppingCart,
   TrendingDown,
   TrendingUp,
-  Users,
   Package,
 } from "lucide-react-native";
 import React, {useMemo, useState} from "react";
@@ -33,6 +30,17 @@ function getPeriodRange(period: string): { start: number; end: number } {
     case "today":
       start.setHours(0, 0, 0, 0);
       break;
+    case 'day_minus_1':
+    case 'day_minus_2':
+    case 'day_minus_3': {
+      const daysBack = parseInt(period.split('_')[2])
+      const d = new Date(now)
+      d.setDate(now.getDate() - daysBack)
+      d.setHours(0, 0, 0, 0)
+      const dEnd = new Date(d)
+      dEnd.setHours(23, 59, 59, 999)
+      return {start: d.getTime(), end: dEnd.getTime()}
+    }
     case "this_week":
       start.setDate(now.getDate() - now.getDay());
       start.setHours(0, 0, 0, 0);
@@ -86,31 +94,33 @@ function DashboardStats({
                           suppliers,
                           products,
                           inventory,
+                          purchaseOrders,
                         }: {
   orders: Order[];
   customers: Customer[];
   suppliers: Supplier[];
   products: any[];
   inventory: any[];
+  purchaseOrders: any[],
 }) {
   const [period, setPeriod] = useState("today");
   const {t} = useCommonTranslation()
 
-  const {revenue, orderCount, profit, receivable, payback} = useMemo(() => {
+  const {revenue, orderCount, profit, receivable, payback, payable} = useMemo(() => {
     const {start, end} = getPeriodRange(period);
     // Include order if it's within the time period AND it's either not canceled or it has a non-zero due balance
     const filtered = orders.filter(
       (o) => o.orderDate.getTime() >= start && o.orderDate.getTime() <= end && (o.status !== OrderStatus.CANCELED || (o.dueAmount !== 0 && o.dueAmount != null))
     );
-    
+
     let revenue = 0;
     let profit = 0;
-    
+
     for (const o of filtered) {
       revenue += o.totalAmount || 0;
       profit += o.profitAmount || 0;
     }
-    
+
     let receivable = 0;
     let payback = 0;
     for (const o of orders) {
@@ -122,8 +132,16 @@ function DashboardStats({
       if (due > 0) receivable += due;
       if (due < 0) payback += Math.abs(due);
     }
-    
-    return {revenue, orderCount: filtered.length, profit, receivable, payback};
+
+    let payable = 0;
+    for (const po of purchaseOrders) {
+      const due = po.dueAmount || 0
+      if (due > 0) {
+        payable += due;
+      }
+    }
+
+    return {revenue, orderCount: filtered.length, profit, receivable, payback, payable};
   }, [orders, period]);
 
   const inventoryValue = useMemo(() => {
@@ -141,11 +159,24 @@ function DashboardStats({
     return total;
   }, [products, inventory]);
 
+
+  const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  const now = new Date();
+  const todayIndex = now.getDay(); // 0 = Sunday, 6 = Saturday
+
+  const yesterday = 'Last ' + DAYS[(todayIndex - 1 + 7) % 7];
+  const dayBeforeYesterday = 'Last ' + DAYS[(todayIndex - 2 + 7) % 7];
+  const threeDaysAgo = 'Last ' + DAYS[(todayIndex - 3 + 7) % 7];
+
   const PERIOD_GROUPS = [
     {
       label: "Time Period",
       items: [
         {label: t('select.today'), value: "today"},
+        {label: yesterday, value: "day_minus_1"},
+        {label: dayBeforeYesterday, value: "day_minus_2"},
+        {label: threeDaysAgo, value: "day_minus_3"},
         {label: t('select.this_week'), value: "this_week"},
         {label: t("select.last_week"), value: "last_week"},
         {label: t('select.this_month'), value: "this_month"},
@@ -160,10 +191,10 @@ function DashboardStats({
   const [calendarVisible, setCalendarVisible] = useState(false)
   const [customRange, setCustomRange] = useState<{ start: number; end: number } | null>(null)
 
-// Replace the useMemo range derivation:
+  // Replace the useMemo range derivation:
   const {start, end} = customRange ?? getPeriodRange(period)
 
-// Reset custom range when period changes:
+  // Reset custom range when period changes:
   const handlePeriodChange = (val: string) => {
     setPeriod(val)
     setCustomRange(null)
@@ -200,21 +231,6 @@ function DashboardStats({
           marginBottom: 70,
         }}
       >
-        <Text style={s.sectionTitle}>Inventory Inquiry</Text>
-        <View style={s.grid}>
-          <View style={[s.statCard,]}>
-            <View style={[s.statIcon, {backgroundColor: "#f59e0b"}]}>
-              <Package size={18} color="#fff"/>
-            </View>
-            <View>
-              <Text style={[s.statValue, {color: "#b45309"}]}>
-                ৳{inventoryValue >= 1000 ? `${(inventoryValue / 1000).toFixed(1)}k` : inventoryValue.toFixed(0)}
-              </Text>
-              <Text style={[s.statLabel, {color: "#b45309"}]}>{'Inventory Value'}</Text>
-            </View>
-          </View>
-        </View>
-
         <Text style={s.sectionTitle}>Income</Text>
         <View style={s.grid}>
           <View style={[s.statCard,]}>
@@ -222,12 +238,12 @@ function DashboardStats({
               <ShoppingCart size={18} color="#fff"/>
             </View>
             <View>
-              <Text style={[s.statValue, ]}>{orderCount}</Text>
+              <Text style={[s.statValue,]}>{orderCount}</Text>
               <Text style={[s.statLabel, {color: "#6b7280"}]}>{t('orders')}</Text>
             </View>
           </View>
 
-          <View style={[s.statCard, ]}>
+          <View style={[s.statCard,]}>
             <View style={[s.statIcon, {backgroundColor: "rgb(0 176 97)"}]}>
               <TrendingUp size={18} color="#fff"/>
             </View>
@@ -242,8 +258,6 @@ function DashboardStats({
             </View>
           </View>
         </View>
-
-        <Text style={s.sectionTitle}>Others</Text>
         <View style={s.grid}>
           <View style={[s.statCard,]}>
             <View style={[s.statIcon, {backgroundColor: "#fee2e2"}]}>
@@ -269,16 +283,35 @@ function DashboardStats({
           {/*  </View>*/}
           {/*</View>*/}
 
-          <View style={[s.statCard,]}>
-            <View style={[s.statIcon, {backgroundColor: "#fee2e2"}]}>
-              <TrendingDown size={18} color={"#991b1b"}/>
+          <View style={[s.statCard]}>
+            <View style={[s.statIcon, {backgroundColor: '#fee2e2'}]}>
+              <TrendingDown size={18} color="#991b1b"/>
             </View>
             <View>
-              <Text style={[s.statValue, {color: "#991b1b"}]}>0{/*{customers.length}*/}</Text>
-              <Text style={[s.statLabel, {color: "#991b1b"}]}>{'Account Payable'}</Text>
+              <Text style={[s.statValue, {color: '#991b1b'}]}>
+                ৳{payable >= 1000 ? `${(payable / 1000).toFixed(1)}k` : payable.toFixed(0)}
+              </Text>
+              <Text style={[s.statLabel, {color: '#991b1b'}]}>Account Payable</Text>
+            </View>
+          </View>
+
+        </View>
+
+        <Text style={s.sectionTitle}>Inventory Inquiry</Text>
+        <View style={s.grid}>
+          <View style={[s.statCard,]}>
+            <View style={[s.statIcon, {backgroundColor: "#f59e0b"}]}>
+              <Package size={18} color="#fff"/>
+            </View>
+            <View>
+              <Text style={[s.statValue, {color: "#b45309"}]}>
+                ৳{inventoryValue >= 1000 ? `${(inventoryValue / 1000).toFixed(1)}k` : inventoryValue.toFixed(0)}
+              </Text>
+              <Text style={[s.statLabel, {color: "#b45309"}]}>{'Inventory Value'}</Text>
             </View>
           </View>
         </View>
+
       </ScrollView>
     </View>
   );
@@ -306,6 +339,10 @@ const EnhancedDashboardStats = withObservables([], () => ({
     .get<Inventory>("inventory")
     .query(Q.where("server_deleted_at", Q.eq(null)))
     .observeWithColumns(['quantity', 'product_id']),
+  purchaseOrders: database.collections
+    .get("purchase_orders")
+    .query(Q.where('server_deleted_at', Q.eq(null)))
+    .observeWithColumns(['due_amount']),
 }))(DashboardStats);
 
 export default function Dashboard() {
@@ -381,7 +418,7 @@ const s = StyleSheet.create({
     minHeight: 165,
     justifyContent: 'space-between'
   },
-  
+
   statIcon: {
     width: 36,
     height: 36,
