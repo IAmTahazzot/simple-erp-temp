@@ -233,16 +233,19 @@ function DashboardStats({
       >
         <Text style={s.sectionTitle}>Income</Text>
         <View style={s.grid}>
+
           <View style={[s.statCard,]}>
-            <View style={[s.statIcon, {backgroundColor: "#0754fc"}]}>
-              <ShoppingCart size={18} color="#fff"/>
+            <View style={[s.statIcon, {backgroundColor: "#f59e0b"}]}>
+              <Package size={18} color="#fff"/>
             </View>
             <View>
-              <Text style={[s.statValue,]}>{orderCount}</Text>
-              <Text style={[s.statLabel, {color: "#6b7280"}]}>{t('orders')}</Text>
+              <Text style={[s.statValue, {color: "#b45309"}]}>
+                ৳{inventoryValue >= 1000 ? `${(inventoryValue / 1000).toFixed(1)}k` : inventoryValue.toFixed(0)}
+              </Text>
+              <Text style={[s.statLabel, {color: "#b45309"}]}>{'Inventory Value'}</Text>
             </View>
           </View>
-
+          
           <View style={[s.statCard,]}>
             <View style={[s.statIcon, {backgroundColor: "rgb(0 176 97)"}]}>
               <TrendingUp size={18} color="#fff"/>
@@ -297,21 +300,18 @@ function DashboardStats({
 
         </View>
 
-        <Text style={s.sectionTitle}>Inventory Inquiry</Text>
+        <Text style={s.sectionTitle}>Orders</Text>
         <View style={s.grid}>
           <View style={[s.statCard,]}>
-            <View style={[s.statIcon, {backgroundColor: "#f59e0b"}]}>
-              <Package size={18} color="#fff"/>
+            <View style={[s.statIcon, {backgroundColor: "#0754fc"}]}>
+              <ShoppingCart size={18} color="#fff"/>
             </View>
             <View>
-              <Text style={[s.statValue, {color: "#b45309"}]}>
-                ৳{inventoryValue >= 1000 ? `${(inventoryValue / 1000).toFixed(1)}k` : inventoryValue.toFixed(0)}
-              </Text>
-              <Text style={[s.statLabel, {color: "#b45309"}]}>{'Inventory Value'}</Text>
+              <Text style={[s.statValue,]}>{orderCount}</Text>
+              <Text style={[s.statLabel, {color: "#6b7280"}]}>{t('orders')}</Text>
             </View>
           </View>
         </View>
-
       </ScrollView>
     </View>
   );
