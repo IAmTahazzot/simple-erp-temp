@@ -4,6 +4,20 @@ import Transaction from './Transaction'
 import PurchaseOrderItem from './PurchaseOrderItem'
 import Supplier from './Supplier'
 
+export enum PurchaseOrderStatus {
+  ACTIVE = 'active',
+  CANCELED = 'canceled',
+  COMPLETED = 'completed'
+}
+
+export enum PurchasePaymentStatus {
+  UNPAID = 'unpaid',
+  PARTIALLY_PAID = 'partially_paid',
+  PAID = 'paid',
+  REFUNDED = 'refunded',
+  PARTIALLY_REFUNDED = 'partially_refunded'
+}
+
 export default class PurchaseOrder extends Model {
   static table = 'purchase_orders'
   static associations = {
@@ -19,6 +33,8 @@ export default class PurchaseOrder extends Model {
   @date('order_date') orderDate!: Date
   @field('status') status!: string
   @field('total_amount') totalAmount!: number
+  @field('due_amount') dueAmount!: number
+  @field('payment_status') paymentStatus!: string
   @field('discount_type') discountType?: string
   @field('discount_value') discountValue?: number
 
@@ -32,4 +48,3 @@ export default class PurchaseOrder extends Model {
   @field('last_modified') lastModified?: number
   @field('server_deleted_at') serverDeletedAt?: number
 }
-

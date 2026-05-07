@@ -101,6 +101,7 @@ export function UpdateProduct({visible, onClose, prevProduct}: UpdateProductProp
             onChangeText={(text) => setProduct((prev) => ({...prev, cost: parseFloat(text) || 0}))}
             inputMode={'numeric'}
             style={{fontSize: 32}}
+            editable={false}
           />
 
           <Text style={{fontFamily: 'HindSiliguribold', color: profit > 0 ? Themes.VOID : Themes.DANGER}}>

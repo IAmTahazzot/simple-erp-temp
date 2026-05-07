@@ -11,7 +11,8 @@ import {Q} from '@nozbe/watermelondb'
 import {database} from '@/database'
 import Supplier from '@/database/models/Supplier'
 import Product from '@/database/models/Product'
-import {X, Check, Plus, Minus, Search as SearchIcon, ShoppingBag, Building2} from 'lucide-react-native'
+import {X, Check, Search as SearchIcon, ShoppingBag, Building2} from 'lucide-react-native'
+import {MegaInput} from '@/components/ui/Input'
 import {createPurchaseOrder, PurchaseOrderLine} from '@/features/purchase/functions'
 import {useOnline} from '@/hooks/use-online'
 import {useAuthStore} from '@/store/authStore'
@@ -88,7 +89,13 @@ function PickerModal<T extends {id: string; name: string}>({
 }
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
-type CartItem = PurchaseOrderLine & {name: string}
+type CartItem = {
+  productId: string
+  productName: string
+  name: string
+  quantity: string  // string so MegaInput can hold partial/empty input
+  unitCost: string  // cost, not selling price — pre-filled from product.cost
+}
 
 function NewPurchaseOrderScreen({suppliers, products}: { suppliers: Supplier[]; products: Product[] }) {
   const router = useRouter()
@@ -103,31 +110,34 @@ function NewPurchaseOrderScreen({suppliers, products}: { suppliers: Supplier[]; 
   const [showProductPicker, setShowProductPicker] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  const subtotal = cart.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0)
+  const subtotal = cart.reduce((sum, i) => {
+    const qty = parseInt(i.quantity) || 0
+    const cost = parseFloat(i.unitCost) || 0
+    return sum + qty * cost
+  }, 0)
   const discountAmount = discountType === 'percent' ? subtotal * (discountValue / 100) : discountValue
   const total = Math.max(0, subtotal - discountAmount)
 
+  // Use product.cost (current avg cost) floored, not selling price
   const addProduct = useCallback((product: Product) => {
     setCart((prev) => {
-      const existing = prev.find((i) => i.productId === product.id)
-      if (existing) {
-        return prev.map((i) => i.productId === product.id ? {...i, quantity: i.quantity + 1} : i)
-      }
+      if (prev.find((i) => i.productId === product.id)) return prev // already in cart
       return [...prev, {
         productId: product.id,
         productName: product.name,
         name: product.name,
-        quantity: 1,
-        unitPrice: product.price,
+        quantity: '1',
+        unitCost: Math.floor(product.cost ?? 0).toString(),
       }]
     })
   }, [])
 
-  const changeQty = (productId: string, delta: number) => {
-    setCart((prev) => prev
-      .map((i) => i.productId === productId ? {...i, quantity: i.quantity + delta} : i)
-      .filter((i) => i.quantity > 0)
-    )
+  const removeFromCart = (productId: string) => {
+    setCart((prev) => prev.filter((i) => i.productId !== productId))
+  }
+
+  const updateCartItem = (productId: string, field: 'quantity' | 'unitCost', value: string) => {
+    setCart((prev) => prev.map((i) => i.productId === productId ? {...i, [field]: value} : i))
   }
 
   const handleSave = async () => {
@@ -136,7 +146,21 @@ function NewPurchaseOrderScreen({suppliers, products}: { suppliers: Supplier[]; 
     if (!user?.id) { Alert.alert('Not logged in'); return }
     setSaving(true)
     try {
-      await createPurchaseOrder(supplier.id, user.id, cart, discountType, discountValue, total, isOnline)
+      await createPurchaseOrder({
+        supplierId: supplier.id,
+        lines: cart.map((i) => ({
+          productId: i.productId,
+          productName: i.productName,
+          quantity: Math.max(1, parseInt(i.quantity) || 1),
+          unitPrice: Math.max(0, parseFloat(i.unitCost) || 0), // unitPrice field = purchase cost
+        })),
+        discountType,
+        discountValue,
+        totalAmount: total,
+        isOnline,
+        userId: user.id,
+        payImmediately: false
+      })
       router.back()
     } catch {
       Alert.alert('Failed to create purchase order')
@@ -187,24 +211,41 @@ function NewPurchaseOrderScreen({suppliers, products}: { suppliers: Supplier[]; 
           {/* Products */}
           <View style={s.section}>
             <Text style={s.sectionTitle}>Products</Text>
-            {cart.map((item) => (
-              <View key={item.productId} style={s.cartRow}>
-                <View style={{flex: 1}}>
-                  <Text style={s.cartName}>{item.name}</Text>
-                  <Text style={s.cartPrice}>৳{item.unitPrice.toFixed(2)} each</Text>
+            {cart.map((item) => {
+              const qty = parseInt(item.quantity) || 0
+              const cost = parseFloat(item.unitCost) || 0
+              const lineTotal = qty * cost
+              return (
+                <View key={item.productId} style={s.cartCard}>
+                  {/* Product name row */}
+                  <View style={s.cartCardHeader}>
+                    <Text style={s.cartName}>{item.name}</Text>
+                    <Pressable onPress={() => removeFromCart(item.productId)} hitSlop={8}>
+                      <X size={16} color="#9ca3af"/>
+                    </Pressable>
+                  </View>
+                  {/* Cost × Qty = Total */}
+                  <View style={s.cartInputRow}>
+                    <MegaInput
+                      label="Cost per unit"
+                      value={item.unitCost}
+                      onChangeText={(v) => updateCartItem(item.productId, 'unitCost', v)}
+                      inputMode="decimal"
+                      style={s.cartMegaInput}
+                    />
+                    <Text style={s.cartMultiply}>×</Text>
+                    <MegaInput
+                      label="Quantity"
+                      value={item.quantity}
+                      onChangeText={(v) => updateCartItem(item.productId, 'quantity', v)}
+                      inputMode="numeric"
+                      style={s.cartMegaInput}
+                    />
+                    <Text style={s.cartTotal}>৳{lineTotal.toFixed(2)}</Text>
+                  </View>
                 </View>
-                <View style={s.qtyRow}>
-                  <Pressable onPress={() => changeQty(item.productId, -1)} style={s.qtyBtn}>
-                    <Minus size={14} color="#111"/>
-                  </Pressable>
-                  <Text style={s.qtyText}>{item.quantity}</Text>
-                  <Pressable onPress={() => changeQty(item.productId, 1)} style={s.qtyBtn}>
-                    <Plus size={14} color="#111"/>
-                  </Pressable>
-                </View>
-                <Text style={s.cartTotal}>৳{(item.unitPrice * item.quantity).toFixed(2)}</Text>
-              </View>
-            ))}
+              )
+            })}
 
             <Pressable style={s.addProductBtn} onPress={() => setShowProductPicker(true)}>
               <ShoppingBag size={16} color="#fff"/>
@@ -302,13 +343,13 @@ const s = StyleSheet.create({
   supplierIcon: {width: 36, height: 36, borderRadius: 10, backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center'},
   selectedName: {fontSize: 15, fontFamily: 'InterMedium', color: '#111'},
   selectedSub: {fontSize: 13, color: '#6b7280', fontFamily: 'InterRegular'},
-  cartRow: {flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f5f5f5'},
-  cartName: {fontSize: 15, fontFamily: 'InterMedium', color: '#111'},
-  cartPrice: {fontSize: 12, color: '#6b7280', fontFamily: 'InterRegular', marginTop: 2},
+  cartCard: {paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f5f5f5'},
+  cartCardHeader: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10},
+  cartName: {fontSize: 15, fontFamily: 'InterMedium', color: '#111', flex: 1, marginRight: 8},
+  cartInputRow: {flexDirection: 'row', alignItems: 'center', gap: 8},
+  cartMegaInput: {flex: 1},
+  cartMultiply: {fontSize: 18, fontFamily: 'InterBold', color: '#374151'},
   cartTotal: {fontSize: 15, fontFamily: 'InterBold', color: '#111', minWidth: 70, textAlign: 'right'},
-  qtyRow: {flexDirection: 'row', alignItems: 'center', gap: 8},
-  qtyBtn: {width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: '#e5e7eb', alignItems: 'center', justifyContent: 'center'},
-  qtyText: {fontSize: 15, fontFamily: 'InterBold', minWidth: 20, textAlign: 'center'},
   addProductBtn: {flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#111827', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 10, marginTop: 12, alignSelf: 'flex-start'},
   addProductBtnText: {color: '#fff', fontFamily: 'InterBold', fontSize: 14},
   payLine: {flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingVertical: 8},

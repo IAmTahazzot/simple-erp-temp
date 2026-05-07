@@ -101,6 +101,18 @@ export default schemaMigrations({
     {
       toVersion: 15,
       steps: []
+    },
+    {
+      toVersion: 16,
+      steps: [
+        addColumns({
+          table: 'purchase_orders',
+          columns: [
+            {name: 'payment_status', type: 'string'},
+            {name: 'due_amount', type: 'number', isOptional: true},
+          ]
+        })
+      ]
     }
   ],
 })

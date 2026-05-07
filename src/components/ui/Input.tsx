@@ -58,27 +58,30 @@ export const Input = ({placeholder, theme = 'DARK', value, size, autoGrow, onCha
 export const MegaInput = ({label, theme = 'DARK', autoGrow, style, ...inputProps}: {
   label: string,
   theme?: ThemeType,
-  autoGrow?: boolean
+  autoGrow?: boolean,
+  
 } & Omit<InputProps, 'theme' | 'autoGrow'>) => {
   const [isFocused, setIsFocused] = useState(false);
   const themeColor = Themes[theme] || Themes.DARK;
   const inputRef = useRef<TextInput>(null)
-
+  const disabledStyle = inputProps.editable === false ? {backgroundColor: '#f0f0f0', borderColor: 'transparent'} : {}
+  
   return (
     <Pressable
       onPress={() => inputRef.current?.focus()}
       style={[
         styles.megaInput,
-        isFocused && {borderColor: themeColor, borderWidth: 2, paddingHorizontal: 13, paddingTop: 7, paddingBottom: 3}
+        isFocused && {borderColor: themeColor, borderWidth: 2, paddingHorizontal: 13, paddingTop: 7, paddingBottom: 3},
+        disabledStyle,
       ]}
     >
       <Text style={[styles.megaInputLabel, isFocused && {color: themeColor}]}>{label}</Text>
       <TextInput
+        {...inputProps}
         ref={inputRef}
         placeholderTextColor={'#797979'}
         multiline={autoGrow}
-        {...inputProps}
-        style={[styles.megaInputText, autoGrow && { minHeight: 24 }, style]}
+        style={[styles.megaInputText, autoGrow && { minHeight: 24 }, style ]}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
       />

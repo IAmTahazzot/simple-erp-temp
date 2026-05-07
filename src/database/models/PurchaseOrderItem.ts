@@ -1,5 +1,7 @@
-import { Model } from '@nozbe/watermelondb'
+import { Model, Relation } from '@nozbe/watermelondb'
 import { field, date, readonly, relation } from '@nozbe/watermelondb/decorators'
+import PurchaseOrder from './PurchaseOrder'
+import Product from './Product'
 
 export default class PurchaseOrderItem extends Model {
   static table = 'purchase_order_items'
@@ -13,8 +15,8 @@ export default class PurchaseOrderItem extends Model {
   @field('quantity') quantity!: number
   @field('unit_price') unitPrice!: number
 
-  @relation('purchase_orders', 'purchase_order_id') purchaseOrder: any
-  @relation('products', 'product_id') product: any
+  @relation('purchase_orders', 'purchase_order_id') purchaseOrder: Relation<PurchaseOrder>
+  @relation('products', 'product_id') product: Relation<Product>
 
   @readonly @date('created_at') createdAt!: Date
   @readonly @date('updated_at') updatedAt!: Date
