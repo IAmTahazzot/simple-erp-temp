@@ -1,18 +1,18 @@
 // app/features/orders/functions.ts
-import { database } from '@/database'
-import Order, { OrderStatus, PaymentStatus } from '@/database/models/Order'
+import {database} from '@/database'
+import Order, {OrderStatus, PaymentStatus} from '@/database/models/Order'
 import OrderItem from '@/database/models/OrderItem'
 import Inventory from '@/database/models/Inventory'
 import TransactionModel from '@/database/models/Transaction'
-import { supabase } from '@/services/supabase'
-import { ToastAndroid, Platform } from 'react-native'
+import {supabase} from '@/services/supabase'
+import {ToastAndroid, Platform} from 'react-native'
 
 export type OrderLine = {
   productId: string
   productName: string
   quantity: number
   unitPrice: number
-  costPrice?: number // for profit calc
+  costPrice: number // for profit calc
 }
 
 // ─── Toast helper ─────────────────────────────────────────────────────────────
@@ -65,7 +65,7 @@ export const createOrder = async (params: {
   userId: string
   payImmediately?: boolean
 }) => {
-  const { customerId, lines, discountType, discountValue, totalAmount, isOnline, userId, payImmediately = false } = params
+  const {customerId, lines, discountType, discountValue, totalAmount, isOnline, userId, payImmediately = false} = params
   const now = Date.now()
 
   // Compute profit from cost prices passed in lines
@@ -76,7 +76,7 @@ export const createOrder = async (params: {
   const orderStatus = payImmediately ? OrderStatus.COMPLETED : OrderStatus.ACTIVE
   const dueAmount = payImmediately ? 0 : totalAmount
 
-  const { order, orderItems, transaction } = await database.write(async () => {
+  const {order, orderItems, transaction} = await database.write(async () => {
     // 1. Create order
     const order = await database.get<Order>('orders').create((o) => {
       o.customerId = customerId
@@ -98,6 +98,7 @@ export const createOrder = async (params: {
         i.productId = line.productId
         i.quantity = line.quantity
         i.unitPrice = line.unitPrice
+        i.costAtSale = line.costPrice
       })
     ))
 
@@ -124,7 +125,7 @@ export const createOrder = async (params: {
       })
     }
 
-    return { order, orderItems, transaction }
+    return {order, orderItems, transaction}
   })
 
   // ─── Supabase sync (best-effort) ──────────────────────────────────────────
@@ -145,7 +146,9 @@ export const createOrder = async (params: {
         created_at: now,
         updated_at: now,
       })
-    } catch { toastSupabaseError('create order') }
+    } catch {
+      toastSupabaseError('create order')
+    }
 
     try {
       await Promise.all(orderItems.map((item) =>
@@ -155,11 +158,14 @@ export const createOrder = async (params: {
           product_id: item.productId,
           quantity: item.quantity,
           unit_price: item.unitPrice,
+          cost_at_sale: item.costAtSale,
           created_at: now,
           updated_at: now,
         })
       ))
-    } catch { toastSupabaseError('create order items') }
+    } catch {
+      toastSupabaseError('create order items')
+    }
 
     if (transaction) {
       try {
@@ -172,7 +178,9 @@ export const createOrder = async (params: {
           created_at: now,
           updated_at: now,
         })
-      } catch { toastSupabaseError('create transaction') }
+      } catch {
+        toastSupabaseError('create transaction')
+      }
     }
   }
 
@@ -217,13 +225,17 @@ export const addPayment = async (
         id: tx.id, order_id: order.id, type: 'payment',
         amount, payment_date: now, created_at: now, updated_at: now,
       })
-    } catch { toastSupabaseError('add payment') }
+    } catch {
+      toastSupabaseError('add payment')
+    }
 
     try {
       await supabase.from('orders')
-        .update({ payment_status: newPaymentStatus, status: newOrderStatus, due_amount: newDue, updated_at: now })
+        .update({payment_status: newPaymentStatus, status: newOrderStatus, due_amount: newDue, updated_at: now})
         .eq('id', order.id)
-    } catch { toastSupabaseError('update order after payment') }
+    } catch {
+      toastSupabaseError('update order after payment')
+    }
   }
 
   return tx
@@ -270,7 +282,9 @@ export const cancelOrder = async (order: Order, isOnline: boolean) => {
           updated_at: now,
         })
         .eq('id', order.id)
-    } catch { toastSupabaseError('cancel order') }
+    } catch {
+      toastSupabaseError('cancel order')
+    }
   }
 }
 
@@ -302,16 +316,15 @@ export const refundOrder = async (
   const newTotalAmount = Math.max(0, order.totalAmount - refundTotal)
   const newDue = newTotalAmount - paidAmount // can be negative (customer owed money)
 
+  const allOrderItems = await order.orderItems.fetch()
   // Recompute profit: need to get costs from products
   let newProfitAmount = order.profitAmount ?? 0
   // Subtract refunded items' profit contribution: refund reduces revenue
   for (const line of validLines) {
-    try {
-      const product = await database.get<any>('products').find(line.productId)
-      const costPerUnit = product?.cost ?? 0
-      const profitContribution = (line.refundUnitPrice - costPerUnit) * line.returnQty
-      newProfitAmount -= profitContribution
-    } catch { /* skip */ }
+    const original = allOrderItems.find(i => i.productId === line.productId && i.quantity > 0)
+    const costPerUnit = original?.costAtSale ?? 0   // ← was product.cost
+    const profitContribution = (line.refundUnitPrice - costPerUnit) * line.returnQty
+    newProfitAmount -= profitContribution
   }
 
   // Determine new payment status
@@ -336,11 +349,13 @@ export const refundOrder = async (
   await database.write(async () => {
     // Create negative order items to represent refund
     for (const line of validLines) {
+      const original = allOrderItems.find(i => i.productId === line.productId && i.quantity > 0)
       const item = await database.get<OrderItem>('order_items').create((i) => {
         i.orderId = order.id
         i.productId = line.productId
         i.quantity = -line.returnQty  // negative qty
         i.unitPrice = line.refundUnitPrice
+        i.costAtSale = original?.costAtSale ?? 0
       })
       newOrderItems.push(item)
 
@@ -373,11 +388,14 @@ export const refundOrder = async (
           product_id: item.productId,
           quantity: item.quantity,
           unit_price: item.unitPrice,
+          cost_at_sale: item.costAtSale,
           created_at: now,
           updated_at: now,
         })
       ))
-    } catch { toastSupabaseError('refund order items') }
+    } catch {
+      toastSupabaseError('refund order items')
+    }
 
     try {
       await supabase.from('orders').update({
@@ -388,7 +406,9 @@ export const refundOrder = async (
         status: newOrderStatus,
         updated_at: now,
       }).eq('id', order.id)
-    } catch { toastSupabaseError('update order after refund') }
+    } catch {
+      toastSupabaseError('update order after refund')
+    }
   }
 }
 
@@ -424,7 +444,7 @@ export const issueRefundPayment = async (
 
   const tx = await database.write(async () => {
     let refundTx: TransactionModel | null = null
-    
+
     if (amountToReturn > 0) {
       refundTx = await database.get<TransactionModel>('transactions').create((t) => {
         t.orderId = order.id
@@ -458,7 +478,9 @@ export const issueRefundPayment = async (
           created_at: now,
           updated_at: now,
         })
-      } catch { toastSupabaseError('add refund payment') }
+      } catch {
+        toastSupabaseError('add refund payment')
+      }
     }
 
     try {
@@ -472,7 +494,9 @@ export const issueRefundPayment = async (
           updated_at: now,
         })
         .eq('id', order.id)
-    } catch { toastSupabaseError('update order after refund payment') }
+    } catch {
+      toastSupabaseError('update order after refund payment')
+    }
   }
 
   return tx
@@ -488,7 +512,7 @@ export type EditOrderParams = {
 
 export const editOrder = async (order: Order, params: EditOrderParams, isOnline: boolean) => {
   const now = Date.now()
-  const { items, discountType, discountValue, totalAmount } = params
+  const {items, discountType, discountValue, totalAmount} = params
 
   // Fetch existing transactions to recompute due
   const existingTx = await order.transactions.fetch()
@@ -510,21 +534,18 @@ export const editOrder = async (order: Order, params: EditOrderParams, isOnline:
 
   for (const item of items) {
     const orderItem = await database.get<OrderItem>('order_items').find(item.id)
-    let product: any = null
-    try {
-      product = await database.get<any>('products').find(orderItem.productId)
-      totalCost += (product?.cost ?? 0) * item.quantity
-    } catch { /* product deleted, skip cost */ }
+    totalCost += (orderItem.costAtSale ?? 0) * item.quantity
 
     itemMetas.push({
       orderItem,
-      product,
+      product: null,
       oldQty: orderItem.quantity,
       newQty: item.quantity,
       productId: orderItem.productId,
     })
   }
-
+  
+  console.log('Total cost for profit calc:', totalCost)
   const newProfit = totalAmount - totalCost
 
   await database.write(async () => {
@@ -570,7 +591,9 @@ export const editOrder = async (order: Order, params: EditOrderParams, isOnline:
           updated_at: now,
         }).eq('id', item.id)
       ))
-    } catch { toastSupabaseError('edit order items') }
+    } catch {
+      toastSupabaseError('edit order items')
+    }
 
     try {
       await supabase.from('orders').update({
@@ -583,6 +606,8 @@ export const editOrder = async (order: Order, params: EditOrderParams, isOnline:
         status: newOrderStatus,
         updated_at: now,
       }).eq('id', order.id)
-    } catch { toastSupabaseError('edit order') }
+    } catch {
+      toastSupabaseError('edit order')
+    }
   }
 }

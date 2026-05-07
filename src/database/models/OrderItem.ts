@@ -14,6 +14,7 @@ export default class OrderItem extends Model {
   @field('product_id') productId!: string
   @field('quantity') quantity!: number
   @field('unit_price') unitPrice!: number
+  @field('cost_at_sale') costAtSale!: number
 
   @relation('orders', 'order_id') order: Relation<Order>
   @relation('products', 'product_id') product: Relation<Product>

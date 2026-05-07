@@ -2,7 +2,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb'
 
 export default appSchema({
-  version: 16,
+  version: 17,
   tables: [
     tableSchema({
       name: 'users',
@@ -115,6 +115,7 @@ export default appSchema({
         { name: 'product_id', type: 'string', isIndexed: true },
         { name: 'quantity', type: 'number' },
         { name: 'unit_price', type: 'number' },
+        { name: 'cost_at_sale', type: 'number'},
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
         { name: 'last_modified', type: 'number', isOptional: true },

@@ -113,6 +113,17 @@ export default schemaMigrations({
           ]
         })
       ]
+    },
+    {
+      toVersion: 17,
+      steps: [
+        addColumns({
+          table: 'order_items',
+          columns: [
+            { name: 'cost_at_sale', type: 'number'},
+          ]
+        })
+      ]
     }
   ],
 })

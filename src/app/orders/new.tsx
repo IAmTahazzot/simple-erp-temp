@@ -202,7 +202,7 @@ function NewOrderScreen({ customers, products }: { customers: Customer[]; produc
           productName: product.name,
           quantity: 1,
           unitPrice: product.price,
-          costPrice: product.cost ?? 0,
+          costPrice: product.cost,
           availableQty: qty,
           isLowStock: qty <= threshold,
         }]

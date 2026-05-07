@@ -148,10 +148,10 @@ function PurchaseOrdersIndex({orders, suppliers}: {orders: PurchaseOrder[]; supp
             <Text style={[s.tabText, filter === 'all' && s.activeTabText]}>All</Text>
          </Pressable>
          <Pressable onPress={() => setFilter('payable')} style={[s.tab, filter === 'payable' && s.activeTab]}>
-            <Text style={[s.tabText, filter === 'payable' && s.activeTabText]}>Account Payable only</Text>
+            <Text style={[s.tabText, filter === 'payable' && s.activeTabText]}>Payable only</Text>
          </Pressable>
          <Pressable onPress={() => setFilter('receivable')} style={[s.tab, filter === 'receivable' && s.activeTab]}>
-            <Text style={[s.tabText, filter === 'receivable' && s.activeTabText]}>Account Receivable only</Text>
+            <Text style={[s.tabText, filter === 'receivable' && s.activeTabText]}>Receivable only</Text>
          </Pressable>
       </View>
 
