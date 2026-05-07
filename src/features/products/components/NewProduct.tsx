@@ -53,6 +53,7 @@ export function NewProductModal({visible, onClose}: NewProductModalProps) {
       stockWarning,    // your existing state
       isOnline,
     )
+    
 
     reset()
     onClose();
