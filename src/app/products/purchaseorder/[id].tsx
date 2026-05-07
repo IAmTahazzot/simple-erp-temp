@@ -762,12 +762,14 @@ function PurchaseOrderDetail({
         <View style={s.actionRow}>
           {payable > 0 && !isCanceled && (
             <Pressable style={s.payBtn} onPress={() => setPayVisible(true)}>
-              <Text style={s.payBtnText}>Pay ৳{payable.toFixed(2)}</Text>
+              <Text style={s.payBtnText}>৳{payable.toFixed(2)}</Text>
+              <Text style={s.payBtnText}>Pay</Text>
             </Pressable>
           )}
           {payable < 0 && !isCanceled && (
             <Pressable style={[s.payBtn, { backgroundColor: '#16a34a' }]} onPress={() => setPaybackVisible(true)}>
-              <Text style={s.payBtnText}>Receive ৳{Math.abs(payable).toFixed(2)}</Text>
+              <Text style={s.payBtnText}>৳{Math.abs(payable).toFixed(2)}</Text>
+              <Text style={s.payBtnText}>Receive</Text>
             </Pressable>
           )}
           {!isCanceled && hasRefundableItems && (
@@ -874,12 +876,12 @@ const s = StyleSheet.create({
   summaryVal: { fontSize: 14, fontFamily: 'InterMedium', color: '#111' },
 
   // Buttons
-  payBtn: { flex: 1, backgroundColor: '#111827', borderRadius: 10, padding: 12, alignItems: 'center', minWidth: 120 },
-  payBtnText: { color: '#fff', fontFamily: 'InterBold', fontSize: 15 },
-  secondaryBtn: { flex: 1, borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, padding: 12, alignItems: 'center', minWidth: 100 },
-  secondaryBtnText: { fontSize: 15, fontFamily: 'InterMedium', color: '#374151' },
-  refundActionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#fef3c7', borderRadius: 10, padding: 12, minWidth: 110 },
-  refundActionBtnText: { fontSize: 15, fontFamily: 'InterBold', color: '#92400e' },
+  payBtn: { flex: 1, justifyContent: 'center', backgroundColor: '#111827', borderRadius: 10, padding: 12, alignItems: 'center', minWidth: 120 },
+  payBtnText: { color: '#fff', fontFamily: 'InterBold', fontSize: 15, textAlign: 'center' },
+  secondaryBtn: { flex: 1, justifyContent: 'center', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, padding: 12, alignItems: 'center', minWidth: 100 },
+  secondaryBtnText: { fontSize: 15, fontFamily: 'InterMedium', color: '#374151', textAlign: 'center' },
+  refundActionBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#fef3c7', borderRadius: 10, padding: 12, minWidth: 110 },
+  refundActionBtnText: { fontSize: 15, fontFamily: 'InterBold', color: '#92400e', textAlign: 'center' },
 
   // Modal
   modalOverlay: { flex: 1, backgroundColor: '#00000055', justifyContent: 'flex-end' },
@@ -891,7 +893,7 @@ const s = StyleSheet.create({
   quickLinkText: { fontSize: 14, color: '#1e40af', fontFamily: 'InterMedium' },
   modalActions: { flexDirection: 'row', gap: 12 },
   confirmBtn: { flex: 1, backgroundColor: '#111827', borderRadius: 10, padding: 12, alignItems: 'center' },
-  confirmBtnText: { fontSize: 15, fontFamily: 'InterBold', color: '#fff' },
+  confirmBtnText: { fontSize: 15, fontFamily: 'InterBold', color: '#fff', textAlign: 'center' },
 
   // Refund modal
   refundItemRow: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f5f5f5' },
