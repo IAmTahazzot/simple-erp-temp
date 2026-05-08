@@ -267,7 +267,7 @@ function NewOrderScreen({ customers, products }: { customers: Customer[]; produc
           </Pressable>
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 150 }}>
 
           {/* Customer */}
           <View style={s.section}>
@@ -303,12 +303,12 @@ function NewOrderScreen({ customers, products }: { customers: Customer[]; produc
                   </Text>
                 </View>
                 <View style={s.qtyRow}>
-                  <Pressable onPress={() => changeQty(item.productId, -1)} style={s.qtyBtn}>
-                    <Minus size={14} color="#111" />
+                  <Pressable hitSlop={10} onPress={() => changeQty(item.productId, -1)} style={s.qtyBtn}>
+                    <Minus size={20} color="#111" />
                   </Pressable>
                   <Text style={s.qtyText}>{item.quantity}</Text>
-                  <Pressable onPress={() => changeQty(item.productId, 1)} style={s.qtyBtn}>
-                    <Plus size={14} color="#111" />
+                  <Pressable hitSlop={10} onPress={() => changeQty(item.productId, 1)} style={s.qtyBtn}>
+                    <Plus size={20} color="#111" />
                   </Pressable>
                 </View>
                 <Text style={s.cartTotal}>৳{(item.unitPrice * item.quantity).toFixed(2)}</Text>
@@ -450,7 +450,7 @@ const s = StyleSheet.create({
   discountInput: { borderBottomWidth: 1, borderBottomColor: '#e5e7eb', minWidth: 50, fontSize: 14, fontFamily: 'InterMedium', color: '#111', paddingVertical: 2, textAlign: 'center' },
   bottomBar: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    flexDirection: 'row', gap: 10, padding: 16,
+    flexDirection: 'row', gap: 10, padding: 16, paddingBottom: 90,
     backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f0f0f0',
   },
   bottomBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 13, borderRadius: 10 },
