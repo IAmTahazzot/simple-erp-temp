@@ -23,8 +23,8 @@ export function UpdateProduct({visible, onClose, prevProduct}: UpdateProductProp
   const [inventory, setInventory] = useState<number>(0);
   const [stockWarning, setStockWarning] = useState<number>(0);
   const [shouldDelete, setShouldDelete] = useState(false);
-  const { isOnline } = useOnline()
-  
+  const {isOnline} = useOnline()
+
   const [product, setProduct] = useState({
     name: '',
     price: 0,
@@ -67,7 +67,7 @@ export function UpdateProduct({visible, onClose, prevProduct}: UpdateProductProp
 
     onClose();
   };
-  
+
   return (
     <BaseModal
       visible={visible}
@@ -97,7 +97,7 @@ export function UpdateProduct({visible, onClose, prevProduct}: UpdateProductProp
           <MegaInput
             label={t('product.cost')}
             theme={'WATER'}
-            value={product.cost.toString()}
+            value={(product.cost).toFixed(2)}
             onChangeText={(text) => setProduct((prev) => ({...prev, cost: parseFloat(text) || 0}))}
             inputMode={'numeric'}
             style={{fontSize: 32}}
@@ -123,7 +123,7 @@ export function UpdateProduct({visible, onClose, prevProduct}: UpdateProductProp
 
 
           <MegaInput label={t('product.stock_warning')}
-                      value={stockWarning.toString()}
+                     value={stockWarning.toString()}
                      onChangeText={text => setStockWarning(parseInt(text) || 0)}
                      theme={'WATER'}
                      inputMode={'numeric'}
@@ -143,10 +143,10 @@ export function UpdateProduct({visible, onClose, prevProduct}: UpdateProductProp
                   variant={'destructive'}
                   style={{width: '100%'}}
                   onPress={() => {
-                    setShouldDelete(true) 
+                    setShouldDelete(true)
                   }}
           />
-          
+
           <AlertDialog visible={shouldDelete} title={'Confirm Deletion'} buttons={[
             {
               text: 'Cancel',
@@ -160,11 +160,11 @@ export function UpdateProduct({visible, onClose, prevProduct}: UpdateProductProp
               style: 'destructive',
               onPress() {
                 if (!prevProduct) return;
-                 deleteProduct(prevProduct, isOnline).then(r => {
-                  ToastAndroid.show('Product has been deleted', ToastAndroid.SHORT)  
-                 }).catch(err => {
-                   ToastAndroid.show('Unable to delete', ToastAndroid.SHORT)
-                 })
+                deleteProduct(prevProduct, isOnline).then(r => {
+                  ToastAndroid.show('Product has been deleted', ToastAndroid.SHORT)
+                }).catch(err => {
+                  ToastAndroid.show('Unable to delete', ToastAndroid.SHORT)
+                })
                 setShouldDelete(false);
                 onClose();
               }

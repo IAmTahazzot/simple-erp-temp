@@ -258,8 +258,6 @@ function DashboardStats({
               <Text style={[s.statLabel, {color: "#6b7280"}]}>{t('profit')}</Text>
             </View>
           </View>
-        </View>
-        <View style={s.grid}>
           <View style={[s.statCard,]}>
             <View style={[s.statIcon, {backgroundColor: "#fee2e2"}]}>
               <TrendingUp size={18} color="#991b1b"/>
@@ -268,22 +266,9 @@ function DashboardStats({
               <Text style={[s.statValue, {color: "#991b1b"}]}>
                 ৳{receivable >= 1000 ? `${(receivable / 1000).toFixed(1)}k` : receivable.toFixed(0)}
               </Text>
-              <Text style={[s.statLabel, {color: "#991b1b"}]}>{'Account Receivable'}</Text>
+              <Text style={[s.statLabel, {color: "#991b1b", fontFamily: 'HindSiliguriSemiBold'}]}>মোট পাওয়ানা</Text>
             </View>
           </View>
-
-          {/*<View style={[s.statCard,]}>*/}
-          {/*  <View style={[s.statIcon, {backgroundColor: "#c8ffed"}]}>*/}
-          {/*    <TrendingDown size={18} color={"#06864a"}/>*/}
-          {/*  </View>*/}
-          {/*  <View>*/}
-          {/*    <Text style={[s.statValue, {color: "#1b9952"}]}>*/}
-          {/*      ৳{payback >= 1000 ? `${(payback / 1000).toFixed(1)}k` : payback.toFixed(0)}*/}
-          {/*    </Text>*/}
-          {/*    <Text style={[s.statLabel, {color: "#1b9952"}]}>{'Total Pay Back'}</Text>*/}
-          {/*  </View>*/}
-          {/*</View>*/}
-
           <View style={[s.statCard]}>
             <View style={[s.statIcon, {backgroundColor: '#fee2e2'}]}>
               <TrendingDown size={18} color="#991b1b"/>
@@ -292,10 +277,9 @@ function DashboardStats({
               <Text style={[s.statValue, {color: '#991b1b'}]}>
                 ৳{payable >= 1000 ? `${(payable / 1000).toFixed(1)}k` : payable.toFixed(0)}
               </Text>
-              <Text style={[s.statLabel, {color: '#991b1b'}]}>Account Payable</Text>
+              <Text style={[s.statLabel, {color: '#991b1b', fontFamily: 'HindSiliguriSemiBold' }]}>মোট ঋণ</Text>
             </View>
           </View>
-
         </View>
 
         <Text style={s.sectionTitle}>Orders</Text>

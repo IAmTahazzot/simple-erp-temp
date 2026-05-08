@@ -8,6 +8,8 @@ import TransactionModel from '@/database/models/Transaction'
 import { supabase } from '@/services/supabase'
 import { ToastAndroid, Platform } from 'react-native'
 import { Q } from '@nozbe/watermelondb'
+import {UNKNOWN_SUPPLIER_NAME} from '@/hooks/use-unknown-supplier';
+import {OrderStatus, PaymentStatus} from '@/database/models/Order';
 
 export type PurchaseOrderLine = {
   productId: string
@@ -517,15 +519,21 @@ export type EditPurchaseOrderParams = {
 }
 
 export const editPurchaseOrder = async (order: PurchaseOrder, params: EditPurchaseOrderParams, isOnline: boolean) => {
+  // let's check if it's unknown supplier
+  const supplier = await order.supplier.fetch()
+  const unknown = supplier.name === UNKNOWN_SUPPLIER_NAME
+  
   const now = Date.now()
   const { items, discountType, discountValue, totalAmount } = params
 
   const existingTx = await order.transactions.fetch()
   const paidAmount = existingTx.reduce((sum, t) => sum + (t.type === 'payment' ? Number(t.amount) : -Number(t.amount)), 0)
   const newDue = totalAmount - paidAmount
+  
   const newPaymentStatus = computePaymentStatus(totalAmount, paidAmount)
   const newOrderStatus = newPaymentStatus === PurchasePaymentStatus.PAID ? PurchaseOrderStatus.COMPLETED : PurchaseOrderStatus.ACTIVE
-
+  
+  
   type ItemMeta = {
     orderItem: PurchaseOrderItem
     oldQty: number
@@ -567,11 +575,11 @@ export const editPurchaseOrder = async (order: PurchaseOrder, params: EditPurcha
 
     await order.update((o) => {
       o.totalAmount = totalAmount
-      o.dueAmount = newDue
+      o.dueAmount = unknown ? 0 : newDue
       o.discountType = discountType ?? undefined
-      o.discountValue = discountValue
-      o.paymentStatus = newPaymentStatus
-      o.status = newOrderStatus
+      o.discountValue = unknown ? 0 : discountValue
+      o.paymentStatus = unknown ? PaymentStatus.PAID : newPaymentStatus
+      o.status = unknown ? OrderStatus.COMPLETED : newOrderStatus
     })
 
     // Recalculate WAC from full purchase history — not incremental, so editing
@@ -596,11 +604,11 @@ export const editPurchaseOrder = async (order: PurchaseOrder, params: EditPurcha
     try {
       await supabase.from('purchase_orders').update({
         total_amount: totalAmount,
-        due_amount: newDue,
+        due_amount: unknown ? 0 : newDue,
         discount_type: discountType,
-        discount_value: discountValue,
-        payment_status: newPaymentStatus,
-        status: newOrderStatus,
+        discount_value: unknown ? 0 : discountValue,
+        payment_status: unknown ? PaymentStatus.PAID : newPaymentStatus,
+        status: unknown ? OrderStatus.COMPLETED : newOrderStatus,
         updated_at: now,
       }).eq('id', order.id)
     } catch { toastSupabaseError('edit purchase order') }

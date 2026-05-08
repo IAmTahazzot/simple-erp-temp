@@ -108,7 +108,6 @@ export const updateCustomer = async (
   data: { name: string; email?: string; phone?: string; address?: string },
   isOnline: boolean
 ) => {
-  await duplicateDetection(data.name, 'customer')
   await database.write(async () => {
     await prev.update((c) => {
       c.name = data.name
@@ -133,7 +132,6 @@ export const updateCustomer = async (
     
     await sync().catch((e) => console.warn('Sync failed after customer update:', e))
   }
-
 }
 
 export const updateSupplier = async (
@@ -141,7 +139,6 @@ export const updateSupplier = async (
   data: { name: string; contactName?: string; email?: string; phone?: string; address?: string },
   isOnline: boolean
 ) => {
-  await duplicateDetection(data.name, 'supplier')
   await database.write(async () => {
     await prev.update((s) => {
       s.name = data.name

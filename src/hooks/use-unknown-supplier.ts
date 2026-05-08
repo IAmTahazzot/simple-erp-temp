@@ -21,7 +21,7 @@ const createUnknownSupplier = async (isOnline: boolean) => {
 
     if (isOnline) {
       try {
-        await supabase.from('suppliers').insert({
+        await supabase.from('suppliers').upsert({
           id: newSupplier.id,
           name: newSupplier.name,
           created_at: supabaseCreatedAt,
@@ -74,7 +74,7 @@ export const useUnknownSupplier = () => {
       }
     };
 
-    fetchUnknownSupplier();
+    fetchUnknownSupplier().then(data => {});
   }, []);
 
   return {unknownSupplier, isLoading};

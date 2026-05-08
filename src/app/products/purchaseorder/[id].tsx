@@ -31,6 +31,7 @@ import {
   RefundLine,
 } from '@/features/purchase/functions';
 import { useOnline } from '@/hooks/use-online';
+import {UNKNOWN_SUPPLIER_NAME} from '@/hooks/use-unknown-supplier';
 
 // -----------------------------------------------------------------------------
 // UI Helpers & Config
@@ -630,6 +631,7 @@ function PurchaseOrderDetail({
   const [editVisible, setEditVisible] = useState(false);
   const [paybackVisible, setPaybackVisible] = useState(false);
 
+  const unknown = supplier.name === UNKNOWN_SUPPLIER_NAME
   const paidAmount = transactions.reduce((sum, t) => sum + (t.type === 'payment' ? Number(t.amount) : 0), 0);
   const refundedAmount = transactions.reduce((sum, t) => sum + (t.type === 'refund' ? Number(t.amount) : 0), 0);
   const totalAmt = Number(order.totalAmount) || 0;
@@ -673,6 +675,13 @@ function PurchaseOrderDetail({
           <Text style={s.headerTitle}>Purchase Order Details</Text>
           <Text style={s.headerSub}>#{order.id.slice(0, 8)}</Text>
         </View>
+        {
+          unknown && (
+            <Pressable onPress={() => setEditVisible(true)} style={{ padding: 4 }}>
+              <Edit2 size={20} color="#111" />
+            </Pressable>
+          )
+        }
         {!isCanceled && !hasTx && (
           <Pressable onPress={() => setEditVisible(true)} style={{ padding: 4 }}>
             <Edit2 size={20} color="#111" />
@@ -751,7 +760,7 @@ function PurchaseOrderDetail({
         </View>
 
         {/* Transaction Activity — Bug fix #2 */}
-        {sortedTx.length > 0 && (
+        {!unknown && sortedTx.length > 0 && (
           <View style={s.card}>
             <Text style={s.cardTitle}>Transaction History</Text>
             {sortedTx.map(tx => <TransactionRow key={tx.id} tx={tx} />)}
@@ -759,31 +768,35 @@ function PurchaseOrderDetail({
         )}
 
         {/* Action Buttons */}
-        <View style={s.actionRow}>
-          {payable > 0 && !isCanceled && (
-            <Pressable style={s.payBtn} onPress={() => setPayVisible(true)}>
-              <Text style={s.payBtnText}>৳{payable.toFixed(2)}</Text>
-              <Text style={s.payBtnText}>Pay</Text>
-            </Pressable>
-          )}
-          {payable < 0 && !isCanceled && (
-            <Pressable style={[s.payBtn, { backgroundColor: '#16a34a' }]} onPress={() => setPaybackVisible(true)}>
-              <Text style={s.payBtnText}>৳{Math.abs(payable).toFixed(2)}</Text>
-              <Text style={s.payBtnText}>Receive</Text>
-            </Pressable>
-          )}
-          {!isCanceled && hasRefundableItems && (
-            <Pressable style={s.refundActionBtn} onPress={() => setRefundVisible(true)}>
-              <RotateCcw size={14} color="#92400e" />
-              <Text style={s.refundActionBtnText}>Refund Items</Text>
-            </Pressable>
-          )}
-          {!isCanceled && (
-            <Pressable style={s.secondaryBtn} onPress={() => setCancelVisible(true)}>
-              <Text style={s.secondaryBtnText}>Cancel Order</Text>
-            </Pressable>
-          )}
-        </View>
+        {
+          !unknown && (
+            <View style={s.actionRow}>
+              {payable > 0 && !isCanceled && (
+                <Pressable style={s.payBtn} onPress={() => setPayVisible(true)}>
+                  <Text style={s.payBtnText}>৳{payable.toFixed(2)}</Text>
+                  <Text style={s.payBtnText}>Pay</Text>
+                </Pressable>
+              )}
+              {payable < 0 && !isCanceled && (
+                <Pressable style={[s.payBtn, { backgroundColor: '#16a34a' }]} onPress={() => setPaybackVisible(true)}>
+                  <Text style={s.payBtnText}>৳{Math.abs(payable).toFixed(2)}</Text>
+                  <Text style={s.payBtnText}>Receive</Text>
+                </Pressable>
+              )}
+              {!isCanceled && hasRefundableItems && (
+                <Pressable style={s.refundActionBtn} onPress={() => setRefundVisible(true)}>
+                  <RotateCcw size={14} color="#92400e" />
+                  <Text style={s.refundActionBtnText}>Refund Items</Text>
+                </Pressable>
+              )}
+              {!isCanceled && (
+                <Pressable style={s.secondaryBtn} onPress={() => setCancelVisible(true)}>
+                  <Text style={s.secondaryBtnText}>Cancel Order</Text>
+                </Pressable>
+              )}
+            </View>
+          )
+        }
       </ScrollView>
 
       {/* Modals */}

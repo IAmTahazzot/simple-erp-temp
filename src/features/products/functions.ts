@@ -85,33 +85,50 @@ export const createProduct = async (
 
 // ─── Add Unknown Supplier to Opening Stock to track proper product cost  ──────────────────────────
 export const addUnknownSupplierToOpeningStock = async (productId: string, cost: number, quantity: number) => {
-  return await database.write(async () => {
-    const supplier = await database.get<Supplier>('suppliers').create((s) => {
-      s.name = UNKNOWN_SUPPLIER_NAME // Use the constant for the supplier name
-    })
+  await database.write(async () => {
+    let supplierId = null
+    
+    const supplier = await database.get<Supplier>('suppliers').query(
+      Q.where('name', UNKNOWN_SUPPLIER_NAME)
+    ).fetch()
+
+    if (supplier.length > 0) {
+      supplierId = supplier[0].id
+    } else {
+      const newSupplier = await database.get<Supplier>('suppliers').create((s) => {
+        s.name = UNKNOWN_SUPPLIER_NAME
+      })
+      supplierId = newSupplier.id
+    }
 
     const totalAmount = cost * quantity
     const orderStatus = PurchaseOrderStatus.COMPLETED // Mark as received since it's opening stock
     const paymentStatus = PurchasePaymentStatus.PAID   // Mark as paid to reflect that cost is accounted for
+    
+    try {
+      const order = await database.get<PurchaseOrder>('purchase_orders').create((o) => {
+        o.supplierId = supplierId
+        o.orderDate = new Date()
+        o.status = orderStatus
+        o.paymentStatus = paymentStatus
+        o.totalAmount = totalAmount
+        o.dueAmount = 0
+        o.discountType = undefined
+        o.discountValue = 0
+      })
 
-    const order = await database.get<PurchaseOrder>('purchase_orders').create((o) => {
-      o.supplierId = supplier.id
-      o.orderDate = new Date()
-      o.status = orderStatus
-      o.paymentStatus = paymentStatus
-      o.totalAmount = totalAmount
-      o.dueAmount = 0
-      o.discountType = undefined
-      o.discountValue = 0
-    })
-
-    // 2. Create order items
-    await database.get<PurchaseOrderItem>('purchase_order_items').create((i) => {
-      i.purchaseOrderId = order.id
-      i.productId = productId
-      i.quantity = quantity
-      i.unitPrice = cost
-    })
+      // 2. Create order items
+      await database.get<PurchaseOrderItem>('purchase_order_items').create((i) => {
+        i.purchaseOrderId = order.id
+        i.productId = productId
+        i.quantity = quantity
+        i.unitPrice = cost
+      })
+    } catch (e) {
+      Alert.alert('Error', 'Unexpected error occurred while creating opening stock entry. Please try again.')
+      console.log(e)
+      throw e
+    }
   })
 }
 
@@ -124,8 +141,6 @@ export const updateProduct = async (
   stockWarning: number,
   isOnline: boolean
 ) => {
-  await duplicateDetection(data.name)
-
   // 2. Write to WatermelonDB
   await database.write(async () => {
     await prevProduct.update((p) => {
