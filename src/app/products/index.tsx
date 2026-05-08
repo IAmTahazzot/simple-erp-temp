@@ -7,6 +7,7 @@ import React, {useCallback, useMemo, useState} from 'react'
 import {UpdateProduct} from '@/features/products/components/UpdateProduct';
 import Inventory from '@/database/models/Inventory';
 import {Search as SearchIcon} from 'lucide-react-native'
+import {formatMoney} from '@/utils/micro-functions';
 
 // ─── Fuzzy score ─────────────────────────────────────────────────────────────
 // Returns 0 (no match) to 100 (exact). Results below MIN_SCORE are hidden.
@@ -60,7 +61,7 @@ const ProductItem = ({item,  inventory, onPress, filterMode}: {
         
         <View>
           <Text style={{fontSize: 20, fontFamily: 'InterMedium', color: '#333333'}}>
-            ৳{item.price.toFixed(2)}
+            {formatMoney(item.price.toFixed(2))}
           </Text>
         </View>
       </View>

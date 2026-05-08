@@ -777,7 +777,7 @@ function PurchaseOrderDetail({
                   <Text style={s.payBtnText}>Pay</Text>
                 </Pressable>
               )}
-              {payable < 0 && !isCanceled && (
+              {payable < 0 && (
                 <Pressable style={[s.payBtn, { backgroundColor: '#16a34a' }]} onPress={() => setPaybackVisible(true)}>
                   <Text style={s.payBtnText}>৳{Math.abs(payable).toFixed(2)}</Text>
                   <Text style={s.payBtnText}>Receive</Text>

@@ -27,8 +27,8 @@ export function UpdateProduct({visible, onClose, prevProduct}: UpdateProductProp
 
   const [product, setProduct] = useState({
     name: '',
-    price: 0,
-    cost: 0,
+    price: '0',
+    cost: '0',
     description: '',
   });
 
@@ -38,8 +38,8 @@ export function UpdateProduct({visible, onClose, prevProduct}: UpdateProductProp
 
     setProduct({
       name: prevProduct.name,
-      price: prevProduct.price,
-      cost: prevProduct.cost,
+      price: prevProduct.price.toString(),
+      cost: prevProduct.cost.toString(),
       description: prevProduct.description || '',
     });
 
@@ -49,8 +49,11 @@ export function UpdateProduct({visible, onClose, prevProduct}: UpdateProductProp
     });
   }, [visible, prevProduct]);
 
-  const profit = Number((product.price - product.cost).toFixed(2));
-  const isValidCalculation = !isNaN(profit) && product.price > 0 && product.cost >= 0;
+  const price = parseFloat(product.price) || 0;
+  const cost = parseFloat(product.cost) || 0;
+
+  const profit = Number((price - cost).toFixed(2));
+  const isValidCalculation = !isNaN(profit) && price > 0 && cost >= 0;
 
   const handleUpdate = async () => {
     if (!prevProduct) return;
@@ -59,7 +62,11 @@ export function UpdateProduct({visible, onClose, prevProduct}: UpdateProductProp
 
     await updateProduct(
       prevProduct,
-      product,
+      {
+        ...product,
+        price: parseFloat(product.price) || 0,
+        cost: parseFloat(product.cost) || 0,
+      },
       inventory,
       stockWarning,
       !!isConnected,
@@ -88,17 +95,17 @@ export function UpdateProduct({visible, onClose, prevProduct}: UpdateProductProp
           <MegaInput
             label={t('product.price')}
             theme={'WATER'}
-            value={product.price.toString()}
-            onChangeText={(text) => setProduct((prev) => ({...prev, price: parseFloat(text) || 0}))}
-            inputMode={'numeric'}
+            value={product.price}
+            onChangeText={(text) => setProduct((prev) => ({...prev, price: text}))}
+            inputMode={'decimal'}
             style={{fontSize: 32}}
           />
 
           <MegaInput
             label={t('product.cost')}
             theme={'WATER'}
-            value={(product.cost).toFixed(2)}
-            onChangeText={(text) => setProduct((prev) => ({...prev, cost: parseFloat(text) || 0}))}
+            value={product.cost}
+            onChangeText={(text) => setProduct((prev) => ({...prev, cost: text}))}
             inputMode={'numeric'}
             style={{fontSize: 32}}
             editable={false}

@@ -35,3 +35,45 @@ export function formatBDT(number: number) {
 
   return `${isNegative ? '-' : ''}৳ ${formatted}`
 }
+
+export function formatMoney(value: number | string) {
+  const number = Number(value)
+
+  if (isNaN(number)) {
+    return '৳ 0'
+  }
+
+  const isNegative = number < 0
+
+  // keep decimal if exists
+  const [integerPart, decimalPart] = Math.abs(number)
+    .toString()
+    .split('.')
+
+  // format BD grouping
+  let str = integerPart
+
+  if (str.length <= 3) {
+    return `৳ ${isNegative ? '-' : ''}${str}${decimalPart ? '.' + decimalPart : ''}`
+  }
+
+  const lastThree = str.slice(-3)
+  let remaining = str.slice(0, -3)
+
+  const parts = []
+
+  while (remaining.length > 2) {
+    parts.unshift(remaining.slice(-2))
+    remaining = remaining.slice(0, -2)
+  }
+
+  if (remaining.length > 0) {
+    parts.unshift(remaining)
+  }
+
+  const formattedInt = `${parts.join(' ')} ${lastThree}`
+
+  return `৳ ${isNegative ? '-' : ''}${formattedInt}${
+    decimalPart ? '.' + decimalPart : ''
+  }`
+}

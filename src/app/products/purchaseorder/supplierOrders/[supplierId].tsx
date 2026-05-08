@@ -14,6 +14,7 @@ import {ArrowLeft, ChevronRight} from 'lucide-react-native'
 import {addPurchasePayment} from '@/features/purchase/functions'
 import {useOnline} from '@/hooks/use-online'
 import {UNKNOWN_SUPPLIER_NAME} from '@/hooks/use-unknown-supplier'
+import {formatMoney} from '@/utils/micro-functions';
 
 const PAYMENT_COLORS: Record<string, { bg: string; text: string }> = {
   unpaid: {bg: '#fef3c7', text: '#92400e'},
@@ -44,14 +45,14 @@ const EnhancedOrderRow = withObservables(['order'], ({order}: { order: PurchaseO
           })}
         </Text>
         {!unknown && due > 0 && (
-          <Text style={s.rowDue}>Payable {due.toFixed(2)}</Text>
+          <Text style={s.rowDue}>Payable {formatMoney(due.toFixed(2))}</Text>
         )}
         {!unknown && due < 0 && (
-          <Text style={[s.rowDue, {color: '#065f46'}]}>Receivable {Math.abs(due).toFixed(2)}</Text>
+          <Text style={[s.rowDue, {color: '#065f46'}]}>Receivable {formatMoney(Math.abs(due).toFixed(2))}</Text>
         )}
       </View>
       <View style={{alignItems: 'flex-end', gap: 6}}>
-        <Text style={s.rowAmount}>{order.totalAmount.toFixed(2)}</Text>
+        <Text style={s.rowAmount}>{formatMoney(order.totalAmount.toFixed(2))}</Text>
         {
           !unknown && (
             <View style={[s.badge, {backgroundColor: colors.bg}]}>
@@ -179,13 +180,13 @@ function SupplierOrdersScreen({supplier, orders}: { supplier: Supplier; orders: 
             <View style={[s.summaryCard, {backgroundColor: '#fee2e2'}]}>
               <Text style={[s.summaryLabel, {color: '#a60000'}]}>Payable</Text>
               <Text style={[s.summaryValue, {color: '#991b1b'}]}>
-                {totalPayable.toFixed(2)}
+                {formatMoney(totalPayable.toFixed(2))}
               </Text>
             </View>
             <View style={[s.summaryCard, {backgroundColor: '#d1fae5'}]}>
               <Text style={[s.summaryLabel, {color: '#006e23'}]}>Receivable</Text>
               <Text style={[s.summaryValue, {color: '#065f46'}]}>
-                {totalReceivable.toFixed(2)}
+                {formatMoney(totalReceivable.toFixed(2))}
               </Text>
             </View>
             <View style={[s.summaryCard, {backgroundColor: '#d3e8ff'}]}>

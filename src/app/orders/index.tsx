@@ -11,6 +11,7 @@ import { withObservables } from '@nozbe/watermelondb/react'
 import { Q } from '@nozbe/watermelondb'
 import { Search as SearchIcon, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react-native'
 import { useRouter } from 'expo-router'
+import {formatMoney} from '@/utils/micro-functions';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type CustomerWithOrders = {
@@ -37,10 +38,10 @@ function CustomerRow({ item, onPress }: { item: CustomerWithOrders; onPress: () 
       </View>
       <View style={{ alignItems: 'flex-end', gap: 4 }}>
         {item.totalDue > 0 && (
-          <Text style={s.dueText}>Due ৳{item.totalDue.toFixed(2)}</Text>
+          <Text style={s.dueText}>Due {formatMoney(item.totalDue.toFixed(2))}</Text>
         )}
         {item.totalPayback > 0 && (
-          <Text style={s.paybackText}>Pay Back ৳{item.totalPayback.toFixed(2)}</Text>
+          <Text style={s.paybackText}>Pay Back {formatMoney(item.totalPayback.toFixed(2))}</Text>
         )}
       </View>
       <ChevronRight size={18} color="#9ca3af" style={{ marginLeft: 8 }} />
@@ -131,7 +132,7 @@ function OrdersIndex({ orders, customers }: { orders: Order[]; customers: Custom
                 <TrendingUp size={16} color="#d71717" />
                 <Text style={s.summaryText}>Total Due</Text>
               </View>
-              <Text style={s.summaryAmountDue}>৳{globalDue.toFixed(2)}</Text>
+              <Text style={s.summaryAmountDue}>{formatMoney(globalDue.toFixed(2))}</Text>
             </View>
           )}
 
@@ -145,7 +146,7 @@ function OrdersIndex({ orders, customers }: { orders: Order[]; customers: Custom
                 <TrendingDown size={16} color="#059669" />
                 <Text style={s.summaryText}>Total Pay Back</Text>
               </View>
-              <Text style={s.summaryAmountPayback}>৳{globalPayback.toFixed(2)}</Text>
+              <Text style={s.summaryAmountPayback}>{formatMoney(globalPayback.toFixed(2))}</Text>
             </View>
           )}
         </View>

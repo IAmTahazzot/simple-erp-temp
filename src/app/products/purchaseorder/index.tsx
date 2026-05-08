@@ -11,6 +11,7 @@ import {withObservables} from '@nozbe/watermelondb/react'
 import {Q} from '@nozbe/watermelondb'
 import {Search as SearchIcon, ChevronRight, TrendingUp, TrendingDown} from 'lucide-react-native'
 import {useRouter} from 'expo-router'
+import {formatMoney} from '@/utils/micro-functions';
 
 type SupplierWithOrders = {
   supplier: Supplier
@@ -35,10 +36,10 @@ function SupplierRow({item, onPress}: {item: SupplierWithOrders; onPress: () => 
       </View>
       <View style={{alignItems: 'flex-end', gap: 4}}>
         {item.totalPayable > 0 && (
-          <Text style={s.payableText}>Payable {item.totalPayable.toFixed(2)}</Text>
+          <Text style={s.payableText}>Payable {formatMoney(item.totalPayable.toFixed(2))}</Text>
         )}
         {item.totalReceivable > 0 && (
-          <Text style={s.receivableText}>Receivable {item.totalReceivable.toFixed(2)}</Text>
+          <Text style={s.receivableText}>Receivable {formatMoney(item.totalReceivable.toFixed(2))}</Text>
         )}
       </View>
       <ChevronRight size={18} color="#9ca3af" style={{marginLeft: 8}} />
@@ -123,7 +124,7 @@ function PurchaseOrdersIndex({orders, suppliers}: {orders: PurchaseOrder[]; supp
                 <TrendingUp size={16} color="#d71717" />
                 <Text style={s.summaryText}>Total Payable</Text>
               </View>
-              <Text style={s.summaryAmountPayable}>{globalPayable.toFixed(2)}</Text>
+              <Text style={s.summaryAmountPayable}>{formatMoney(globalPayable.toFixed(2))}</Text>
             </View>
           )}
 
@@ -137,7 +138,7 @@ function PurchaseOrdersIndex({orders, suppliers}: {orders: PurchaseOrder[]; supp
                 <TrendingDown size={16} color="#059669" />
                 <Text style={s.summaryText}>Total Receivable</Text>
               </View>
-              <Text style={s.summaryAmountReceivable}>{globalReceivable.toFixed(2)}</Text>
+              <Text style={s.summaryAmountReceivable}>{formatMoney(globalReceivable.toFixed(2))}</Text>
             </View>
           )}
         </View>

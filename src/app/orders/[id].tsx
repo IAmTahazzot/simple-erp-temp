@@ -18,6 +18,7 @@ import {
 } from 'lucide-react-native'
 import { addPayment, cancelOrder, refundOrder, editOrder, RefundLine, issueRefundPayment } from '@/features/orders/functions'
 import { useOnline } from '@/hooks/use-online'
+import {formatMoney} from '@/utils/micro-functions';
 
 // ─── Status config ────────────────────────────────────────────────────────────
 const PAYMENT_STATUS_CONFIG: Record<string, { color: string; label: string }> = {
@@ -624,7 +625,7 @@ const OrderDetailItem = withObservables(['item'], ({ item }: { item: OrderItem }
       </Text>
     </View>
     <Text style={[s.itemTotal, item.quantity < 0 && { color: '#dc2626' }]}>
-      {item.quantity < 0 ? '-' : ''}৳{Math.abs(item.quantity * item.unitPrice).toFixed(2)}
+      {item.quantity < 0 ? '-' : ''}{formatMoney(Math.abs(item.quantity * item.unitPrice).toFixed(2))}
     </Text>
   </View>
 ))
@@ -752,23 +753,23 @@ function OrderDetail({ order, customer, items, transactions }: {
 
           <View style={s.summaryRow}>
             <Text style={s.summaryKey}>Total</Text>
-            <Text style={s.summaryVal}>৳{totalAmt.toFixed(2)}</Text>
+            <Text style={s.summaryVal}>{formatMoney(totalAmt.toFixed(2))}</Text>
           </View>
           <View style={s.summaryRow}>
             <Text style={s.summaryKey}>Paid</Text>
-            <Text style={[s.summaryVal, { color: '#065f46' }]}>৳{netPaid.toFixed(2)}</Text>
+            <Text style={[s.summaryVal, { color: '#065f46' }]}>{formatMoney(netPaid.toFixed(2))}</Text>
           </View>
           {refundedAmount > 0 && (
             <View style={s.summaryRow}>
               <Text style={s.summaryKey}>Refunded</Text>
-              <Text style={[s.summaryVal, { color: '#dc2626' }]}>৳{refundedAmount.toFixed(2)}</Text>
+              <Text style={[s.summaryVal, { color: '#dc2626' }]}>{formatMoney(refundedAmount.toFixed(2))}</Text>
             </View>
           )}
           {order.profitAmount !== undefined && order.profitAmount !== null && (
             <View style={s.summaryRow}>
               <Text style={s.summaryKey}>Profit</Text>
               <Text style={[s.summaryVal, { color: (order.profitAmount ?? 0) >= 0 ? '#065f46' : '#dc2626' }]}>
-                ৳{(order.profitAmount ?? 0).toFixed(2)}
+                {formatMoney((order.profitAmount ?? 0).toFixed(2))}
               </Text>
             </View>
           )}
@@ -780,7 +781,7 @@ function OrderDetail({ order, customer, items, transactions }: {
               fontFamily: 'InterBold',
               color: due > 0 ? '#92400e' : due < 0 ? '#065f46' : '#111',
             }]}>
-              ৳{Math.abs(due).toFixed(2)}
+              {formatMoney(Math.abs(due).toFixed(2))}
             </Text>
           </View>
 
@@ -810,11 +811,12 @@ function OrderDetail({ order, customer, items, transactions }: {
                     <Text style={s.txDate}>
                       {new Date(tx.paymentDate).toLocaleDateString('en-US', {
                         month: 'short', day: 'numeric', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit',
                       })}
                     </Text>
                   </View>
                   <Text style={[s.txAmount, { color: tx.type === 'payment' ? '#065f46' : '#dc2626' }]}>
-                    {tx.type === 'payment' ? '+' : '-'}৳{tx.amount.toFixed(2)}
+                    {tx.type === 'payment' ? '+' : '-'}{formatMoney(tx.amount.toFixed(2))}
                   </Text>
                 </View>
               ))}

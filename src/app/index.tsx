@@ -242,7 +242,7 @@ function DashboardStats({
               <TrendingUp size={18} color="#fff"/>
             </View>
             <View>
-              <Text style={[s.statValue,]}>
+              <Text style={[s.statValue, { color: '#009346'}]}>
                 {/*৳{profit >= 1000 ? `${(profit / 1000).toFixed(1)}k` : profit.toFixed(0)}*/}
                 {formatBDT(profit)}
               </Text>

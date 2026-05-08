@@ -13,6 +13,7 @@ import Customer from '@/database/models/Customer'
 import { ArrowLeft, ChevronRight } from 'lucide-react-native'
 import { addPayment } from '@/features/orders/functions'
 import { useOnline } from '@/hooks/use-online'
+import {formatMoney} from '@/utils/micro-functions';
 
 // ─── Status badge colors ──────────────────────────────────────────────────────
 const PAYMENT_COLORS: Record<string, { bg: string; text: string }> = {
@@ -41,17 +42,18 @@ const EnhancedOrderRow = withObservables(['order'], ({ order }: { order: Order }
         <Text style={s.rowDate}>
           {new Date(order.orderDate).toLocaleDateString('en-US', {
             year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: 'numeric'
           })}
         </Text>
         {due > 0 && (
-          <Text style={s.rowDue}>Due ৳{due.toFixed(2)}</Text>
+          <Text style={s.rowDue}>Due {formatMoney(due.toFixed(2))}</Text>
         )}
         {due < 0 && (
-          <Text style={[s.rowDue, { color: '#065f46' }]}>Customer owed ৳{Math.abs(due).toFixed(2)}</Text>
+          <Text style={[s.rowDue, { color: '#065f46' }]}>Customer owed {formatMoney(Math.abs(due).toFixed(2))}</Text>
         )}
       </View>
       <View style={{ alignItems: 'flex-end', gap: 6 }}>
-        <Text style={s.rowAmount}>৳{order.totalAmount.toFixed(2)}</Text>
+        <Text style={s.rowAmount}>{formatMoney(order.totalAmount.toFixed(2))}</Text>
         <View style={[s.badge, { backgroundColor: colors.bg }]}>
           <Text style={[s.badgeText, { color: colors.text }]}>
             {isCanceled ? 'canceled' : order.paymentStatus.replace('_', ' ')}
@@ -88,7 +90,7 @@ function BulkPayModal({ visible, totalDue, onClose, onPay }: {
         <View style={s.modalOverlay}>
           <View style={s.modalSheet}>
             <Text style={s.modalTitle}>Record Bulk Payment</Text>
-            <Text style={s.modalSub}>Total Due: ৳{totalDue.toFixed(2)}</Text>
+            <Text style={s.modalSub}>Total Due: {formatMoney(totalDue.toFixed(2))}</Text>
             <TextInput
               style={s.modalInput}
               value={amount}
@@ -99,7 +101,7 @@ function BulkPayModal({ visible, totalDue, onClose, onPay }: {
               autoFocus
             />
             <Pressable onPress={() => setAmount(totalDue.toFixed(2))} style={s.quickLink}>
-              <Text style={s.quickLinkText}>Pay full ৳{totalDue.toFixed(2)}</Text>
+              <Text style={s.quickLinkText}>Pay full {formatMoney(totalDue.toFixed(2))}</Text>
             </Pressable>
             <View style={s.modalActions}>
               <Pressable onPress={onClose} style={s.cancelBtn}>
@@ -167,13 +169,13 @@ function CustomerOrdersScreen({ customer, orders }: { customer: Customer; orders
         <View style={[s.summaryCard, { backgroundColor: totalDue > 0 ? '#fee2e2' : '#d1fae5' }]}>
           <Text style={[s.summaryLabel, { color: totalDue > 0 ? '#a60000' : '#000'}]}>{totalDue < 0 ? 'To Pay Back' : 'Total Due'}</Text>
           <Text style={[s.summaryValue, { color: totalDue > 0 ? '#991b1b' : '#065f46' }]}>
-            ৳{Math.abs(totalDue).toFixed(2)}
+            {formatMoney(Math.abs(totalDue).toFixed(2))}
           </Text>
         </View>
         <View style={[s.summaryCard, { backgroundColor: '#a6ffca' }]}>
           <Text style={[s.summaryLabel, { color: '#006e23'}]}>Total Profit</Text>
           <Text style={[s.summaryValue, { color: totalProfit >= 0 ? '#065f46' : '#991b1b' }]}>
-            ৳{totalProfit.toFixed(2)}
+            {formatMoney(totalProfit.toFixed(2))}
           </Text>
         </View>
         <View style={[s.summaryCard, { backgroundColor: '#d3e8ff' }]}>
@@ -244,7 +246,7 @@ const s = StyleSheet.create({
     flexDirection: 'row', gap: 8, padding: 12,
   },
   summaryCard: {
-    flex: 1, borderRadius: 10, padding: 12,
+    flex: 1, borderRadius: 10, padding: 8 
   },
   summaryLabel: { fontSize: 12, fontFamily: 'InterMedium', color: '#6b7280', marginBottom: 4 },
   summaryValue: { fontSize: 18, fontFamily: 'InterBold' },

@@ -14,6 +14,7 @@ import { X, Check, Plus, Minus, Search as SearchIcon, UserPlus, ShoppingBag, Cre
 import { createOrder } from '@/features/orders/functions'
 import { useOnline } from '@/hooks/use-online'
 import { useAuthStore } from '@/store/authStore'
+import {formatMoney} from '@/utils/micro-functions';
 
 // ─── Fuzzy search ─────────────────────────────────────────────────────────────
 function fuzzyScore(name: string, query: string): number {
@@ -311,7 +312,7 @@ function NewOrderScreen({ customers, products }: { customers: Customer[]; produc
                     <Plus size={20} color="#111" />
                   </Pressable>
                 </View>
-                <Text style={s.cartTotal}>৳{(item.unitPrice * item.quantity).toFixed(2)}</Text>
+                <Text style={s.cartTotal}>{formatMoney((item.unitPrice * item.quantity).toFixed(2))}</Text>
               </View>
             ))}
 
@@ -329,7 +330,7 @@ function NewOrderScreen({ customers, products }: { customers: Customer[]; produc
 
             <View style={s.payLine}>
               <Text style={s.payKey}>Subtotal</Text>
-              <Text style={s.payVal}>৳{subtotal.toFixed(2)}</Text>
+              <Text style={s.payVal}>{formatMoney(subtotal.toFixed(2))}</Text>
             </View>
 
             <View style={s.payLine}>
@@ -359,12 +360,12 @@ function NewOrderScreen({ customers, products }: { customers: Customer[]; produc
                   />
                 </View>
               </View>
-              <Text style={s.payVal}>-৳{discountAmount.toFixed(2)}</Text>
+              <Text style={s.payVal}>(-) {formatMoney(discountAmount.toFixed(2))}</Text>
             </View>
 
             <View style={[s.payLine, { borderTopWidth: 1, borderTopColor: '#f0f0f0', paddingTop: 12, marginTop: 4 }]}>
               <Text style={[s.payKey, { fontFamily: 'InterBold', fontSize: 16 }]}>Total</Text>
-              <Text style={[s.payVal, { fontFamily: 'InterBold', fontSize: 16 }]}>৳{total.toFixed(2)}</Text>
+              <Text style={[s.payVal, { fontFamily: 'InterBold', fontSize: 16 }]}>{formatMoney(total.toFixed(2))}</Text>
             </View>
           </View>
 
