@@ -1,23 +1,24 @@
-import { useEffect, useState } from 'react';
-import { database } from '@/database';
-import { Q } from '@nozbe/watermelondb';
-import { useOnline } from '@/hooks/use-online'
-import { supabase } from '@/services/supabase'
+import {useEffect, useState} from 'react';
+import {database} from '@/database';
+import {Q} from '@nozbe/watermelondb';
+import {useOnline} from '@/hooks/use-online'
+import {supabase} from '@/services/supabase'
+import Supplier from '@/database/models/Supplier';
 
 export const UNKNOWN_SUPPLIER_NAME = 'Unknown Supplier';
 
 const createUnknownSupplier = async (isOnline: boolean) => {
   try {
 
-    const newSupplier =  await database.write(async () => {
-      return await database.collections.get('suppliers').create(supplier => {
+    const newSupplier = await database.write(async () => {
+      return await database.collections.get<Supplier>('suppliers').create(supplier => {
         supplier.name = UNKNOWN_SUPPLIER_NAME;
       });
     })
-    
-    const supabaseCreatedAt = new Date(newSupplier.createdAt).getTime() 
+
+    const supabaseCreatedAt = new Date(newSupplier.createdAt).getTime()
     const supabaseUpdatedAt = new Date(newSupplier.updatedAt).getTime()
-    
+
     if (isOnline) {
       try {
         await supabase.from('suppliers').insert({
@@ -26,11 +27,11 @@ const createUnknownSupplier = async (isOnline: boolean) => {
           created_at: supabaseCreatedAt,
           updated_at: supabaseUpdatedAt,
         })
-      } catch(err) {
+      } catch (err) {
         console.error('Error syncing unknown supplier to Supabase:', err);
       }
     }
-    
+
     return newSupplier;
   } catch (e) {
     console.error('Error creating unknown supplier:', e);
@@ -40,25 +41,31 @@ const createUnknownSupplier = async (isOnline: boolean) => {
 
 export const useUnknownSupplier = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [unknownSupplier, setUnknownSupplier] = useState(null);
-  const { isOnline } = useOnline();
-  
+  const [unknownSupplier, setUnknownSupplier] = useState<Supplier | null>(null);
+  const {isOnline} = useOnline();
+
   useEffect(() => {
     const fetchUnknownSupplier = async () => {
       setIsLoading(true);
       try {
         const res = await database
           .collections
-          .get('suppliers')
+          .get<Supplier>('suppliers')
           .query(
             Q.where('name', UNKNOWN_SUPPLIER_NAME)
           )
-          .fetch();
+          .fetch() satisfies Supplier[];
+
         if (res.length > 0) {
           setUnknownSupplier(res[0]);
         } else {
           const newSupplier = await createUnknownSupplier(isOnline);
-          setUnknownSupplier(newSupplier);
+          
+          if (newSupplier) {
+            setUnknownSupplier(newSupplier);
+          } else {
+            console.error('Failed to create unknown supplier');
+          }
         }
       } catch (e) {
         console.error('Error fetching unknown supplier:', e);
@@ -70,5 +77,5 @@ export const useUnknownSupplier = () => {
     fetchUnknownSupplier();
   }, []);
 
-  return { unknownSupplier, isLoading };
+  return {unknownSupplier, isLoading};
 };

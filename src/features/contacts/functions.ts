@@ -3,14 +3,28 @@ import Customer from '@/database/models/Customer'
 import Supplier from '@/database/models/Supplier'
 import {supabase} from '@/services/supabase'
 import {sync} from '@/database/sync'
-import {ToastAndroid} from 'react-native'
+import {Alert, ToastAndroid} from 'react-native'
+
+const duplicateDetection = async (name: string, type: 'customer' | 'supplier') => {
+  const table = type === 'customer' ? 'customers' : 'suppliers'
+  const existing = await database.get<Supplier | Customer>(table).query().fetch()
+
+  const exist = existing.some((item) => item.name.toLowerCase() === name.toLowerCase())
+  
+  if (exist) {
+    Alert.alert('Duplicate ' + type, `${name} already exists as a ${type}. Please choose a different name.`)
+    throw new Error('Duplicate ' + type + ' name')
+  }
+}
 
 // ─── Create Customer ──────────────────────────────────────────────────────────
-
 export const createCustomer = async (
   data: { name: string; email?: string; phone?: string; address?: string },
   isOnline: boolean
 ) => {
+ 
+  await duplicateDetection(data.name, 'customer')
+  
   const customer = await database.write(async () => {
     return database.get<Customer>('customers').create((c) => {
       c.name = data.name
@@ -51,6 +65,7 @@ export const createSupplier = async (
   data: { name: string; contactName?: string; email?: string; phone?: string; address?: string },
   isOnline: boolean
 ) => {
+  await duplicateDetection(data.name, 'supplier')
   const supplier = await database.write(async () => {
     return database.get<Supplier>('suppliers').create((s) => {
       s.name = data.name
@@ -93,6 +108,7 @@ export const updateCustomer = async (
   data: { name: string; email?: string; phone?: string; address?: string },
   isOnline: boolean
 ) => {
+  await duplicateDetection(data.name, 'customer')
   await database.write(async () => {
     await prev.update((c) => {
       c.name = data.name
@@ -125,6 +141,7 @@ export const updateSupplier = async (
   data: { name: string; contactName?: string; email?: string; phone?: string; address?: string },
   isOnline: boolean
 ) => {
+  await duplicateDetection(data.name, 'supplier')
   await database.write(async () => {
     await prev.update((s) => {
       s.name = data.name

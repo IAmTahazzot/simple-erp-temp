@@ -3,10 +3,24 @@ import Product from '@/database/models/Product'
 import Inventory from '@/database/models/Inventory'
 import {supabase} from '@/services/supabase'
 import {sync} from '@/database/sync';
-import { UNKNOWN_SUPPLIER_NAME } from '@/hooks/use-unknown-supplier'
-import { PurchaseOrderStatus, PurchasePaymentStatus } from '@/database/models/PurchaseOrder'
-import PurchaseOrder from '@/database/models/PurchaseOrder'
+import {UNKNOWN_SUPPLIER_NAME} from '@/hooks/use-unknown-supplier'
+import PurchaseOrder, {PurchaseOrderStatus, PurchasePaymentStatus} from '@/database/models/PurchaseOrder'
 import PurchaseOrderItem from '@/database/models/PurchaseOrderItem'
+import Supplier from '@/database/models/Supplier';
+import {Alert} from 'react-native';
+import {Q} from '@nozbe/watermelondb';
+
+const duplicateDetection = async (name: string) => {
+  // 1. Check if product with same name already exists (optional but good UX)
+  const existingProducts = await database.get<Product>('products').query(
+    Q.where('name', Q.like(name.trim().toLowerCase()))
+  ).fetch()
+
+  if (existingProducts.length > 0) {
+    Alert.alert('Duplicate Product', `A product with the name "${name}" already exists. Please choose a different name.`)
+    throw new Error('Duplicate product name')
+  }
+}
 
 // ─── Create Product ───────────────────────────────────────────────────────────
 export const createProduct = async (
@@ -16,27 +30,36 @@ export const createProduct = async (
   isOnline: boolean
 ) => {
 
+  await duplicateDetection(data.name)
+
   // 2. Write everything to WatermelonDB
   const {product} = await database.write(async () => {
-    const product = await database.get<Product>('products').create((p) => {
-      p.name = data.name
-      p.price = data.price
-      p.cost = data.cost
-      p.description = data.description
-    })
+    try {
 
-    await database.get<Inventory>('inventory').create((inv) => {
-      inv.productId = product.id
-      inv.quantity = quantity
-      inv.lowStockThreshold = lowStockThreshold
-    })
+      const product = await database.get<Product>('products').create((p) => {
+        p.name = data.name
+        p.price = data.price
+        p.cost = data.cost
+        p.description = data.description
+      })
 
-    return {product}
+      await database.get<Inventory>('inventory').create((inv) => {
+        inv.productId = product.id
+        inv.quantity = quantity
+        inv.lowStockThreshold = lowStockThreshold
+      })
+      return {product}
+    } catch (e) {
+      Alert.alert('Error', 'Unexpected error occurred while creating product. Please try again.')
+      throw e
+    }
   })
 
   // 3. As it's a new product, we need to tract cost via an "unknown supplier" entry in the purchase order table. This allows us to properly track product cost and profit even if the user starts selling before recording a purchase.
-  await addUnknownSupplierToOpeningStock(product.id, data.cost, quantity)
-  
+  if (data.cost > 0) {
+    await addUnknownSupplierToOpeningStock(product.id, data.cost, quantity)
+  }
+
   // 4. If online → push all to Supabase
   if (isOnline) {
     // Fix 2: send numbers not ISO strings for created_at / updated_at
@@ -63,7 +86,7 @@ export const createProduct = async (
 // ─── Add Unknown Supplier to Opening Stock to track proper product cost  ──────────────────────────
 export const addUnknownSupplierToOpeningStock = async (productId: string, cost: number, quantity: number) => {
   return await database.write(async () => {
-    const supplier = await database.get('suppliers').create((s) => {
+    const supplier = await database.get<Supplier>('suppliers').create((s) => {
       s.name = UNKNOWN_SUPPLIER_NAME // Use the constant for the supplier name
     })
 
@@ -101,6 +124,8 @@ export const updateProduct = async (
   stockWarning: number,
   isOnline: boolean
 ) => {
+  await duplicateDetection(data.name)
+
   // 2. Write to WatermelonDB
   await database.write(async () => {
     await prevProduct.update((p) => {

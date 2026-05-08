@@ -12,8 +12,9 @@ import {ShadcnAlert} from '@/components/ui/ShadcnAlert';
 import {Drawer} from '@/components/ui/Drawer';
 import {Select} from '@/components/ui/Select'
 import {Button} from '@/components/ui/Button';
-import {LogOut, RefreshCcw, Languages} from 'lucide-react-native'
+import {LogOut, RefreshCcw, Languages, DatabaseBackup} from 'lucide-react-native'
 import {sync} from '@/database/sync'
+import { localBackup, getDbSourcePath  } from '@/services/backup'
 
 export const MainHeader = () => {
   const {t, i18n} = useCommonTranslation()
@@ -76,6 +77,17 @@ export const MainHeader = () => {
                     }}/>
                   </Animated.View>
                 }/>
+        {/*<Button */}
+        {/*  size={'icon'}*/}
+        {/*  rightIcon={<DatabaseBackup size={20} color={'white'}/>} */}
+        {/*  onPress={() => {*/}
+        {/*    localBackup().then(() => {*/}
+        {/*      ToastAndroid.show('Backup completed', ToastAndroid.SHORT)*/}
+        {/*    }).catch(() => {*/}
+        {/*      ToastAndroid.show('Backup failed', ToastAndroid.SHORT)*/}
+        {/*    })*/}
+        {/*  }}*/}
+        {/*/>*/}
         <Button size={'icon'} rightIcon={<Languages size={20} color={'white'}/>} onPress={() => {
           switchLanguage(activeLanguage === 'en' ? 'bn' : 'en').then(r => {
             ToastAndroid.show('Language switched', ToastAndroid.SHORT)

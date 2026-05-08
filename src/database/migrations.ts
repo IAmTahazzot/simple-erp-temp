@@ -124,6 +124,32 @@ export default schemaMigrations({
           ]
         })
       ]
+    },
+    {
+      toVersion: 18,
+      steps: [
+        {
+          type: 'sql',
+          sql: `
+            CREATE UNIQUE INDEX customers_name_unique
+            ON customers(name);
+          `,
+        },
+        {
+          type: 'sql',
+          sql: `
+            CREATE UNIQUE INDEX suppliers_name_unique
+            ON suppliers(name);
+          `,
+        },
+        {
+          type: 'sql',
+          sql: `
+            CREATE UNIQUE INDEX products_name_unique
+            ON products(name);
+          `,
+        },
+      ]
     }
   ],
 })
