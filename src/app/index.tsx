@@ -16,8 +16,10 @@ import {
   Package,
 } from "lucide-react-native";
 import React, {useMemo, useState} from "react";
-import {ScrollView, StyleSheet, Text, View} from "react-native";
+import {Pressable, ScrollView, StyleSheet, Text, View} from "react-native";
 import {useCommonTranslation} from '@/i18n/useTypedTranslation';
+import {formatBDT} from '@/utils/micro-functions';
+import {useRouter} from 'expo-router';
 
 
 // ─── Time period helpers ──────────────────────────────────────────────────────
@@ -105,7 +107,6 @@ function DashboardStats({
 }) {
   const [period, setPeriod] = useState("today");
   const {t} = useCommonTranslation()
-
   const {revenue, orderCount, profit, receivable, payback, payable} = useMemo(() => {
     const {start, end} = getPeriodRange(period);
     // Include order if it's within the time period AND it's either not canceled or it has a non-zero due balance
@@ -143,7 +144,6 @@ function DashboardStats({
 
     return {revenue, orderCount: filtered.length, profit, receivable, payback, payable};
   }, [orders, period]);
-
   const inventoryValue = useMemo(() => {
     const productCostMap = new Map<string, number>();
     for (const p of products) {
@@ -158,16 +158,13 @@ function DashboardStats({
     }
     return total;
   }, [products, inventory]);
-
-
   const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
   const now = new Date();
   const todayIndex = now.getDay(); // 0 = Sunday, 6 = Saturday
-
   const yesterday = 'Last ' + DAYS[(todayIndex - 1 + 7) % 7];
   const dayBeforeYesterday = 'Last ' + DAYS[(todayIndex - 2 + 7) % 7];
   const threeDaysAgo = 'Last ' + DAYS[(todayIndex - 3 + 7) % 7];
+  const router = useRouter()
 
   const PERIOD_GROUPS = [
     {
@@ -215,12 +212,7 @@ function DashboardStats({
 
           </View>
           <Text style={s.revenueLabel}>{t('totalRevenue')}</Text>
-          <Text style={s.revenueAmount}>
-            ৳ {revenue.toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}
-          </Text>
+          <Text style={s.revenueAmount}>{formatBDT(revenue)}</Text>
         </View>
       </View>
 
@@ -239,7 +231,8 @@ function DashboardStats({
             </View>
             <View>
               <Text style={[s.statValue, {color: "#b45309"}]}>
-                ৳{inventoryValue >= 1000 ? `${(inventoryValue / 1000).toFixed(1)}k` : inventoryValue.toFixed(0)}
+                {/*৳{inventoryValue >= 1000 ? `${(inventoryValue / 1000).toFixed(1)}k` : inventoryValue.toFixed(0)}*/}
+                {formatBDT(inventoryValue)}
               </Text>
               <Text style={[s.statLabel, {color: "#b45309"}]}>{'Inventory Value'}</Text>
             </View>
@@ -250,34 +243,42 @@ function DashboardStats({
             </View>
             <View>
               <Text style={[s.statValue,]}>
-                ৳
-                {profit >= 1000
-                  ? `${(profit / 1000).toFixed(1)}k`
-                  : profit.toFixed(0)}
+                {/*৳{profit >= 1000 ? `${(profit / 1000).toFixed(1)}k` : profit.toFixed(0)}*/}
+                {formatBDT(profit)}
               </Text>
               <Text style={[s.statLabel, {color: "#6b7280"}]}>{t('profit')}</Text>
             </View>
           </View>
+
           <View style={[s.statCard,]}>
-            <View style={[s.statIcon, {backgroundColor: "#fee2e2"}]}>
-              <TrendingUp size={18} color="#991b1b"/>
-            </View>
+            <Pressable hitSlop={20} onPress={() => router.push('/orders')}>
+              <View style={[s.statIcon, {backgroundColor: "#fee2e2"}]}>
+                <TrendingUp size={18} color="#991b1b"/>
+              </View>
+            </Pressable>
             <View>
               <Text style={[s.statValue, {color: "#991b1b"}]}>
-                ৳{receivable >= 1000 ? `${(receivable / 1000).toFixed(1)}k` : receivable.toFixed(0)}
+                {/*৳{receivable >= 1000 ? `${(receivable / 1000).toFixed(1)}k` : receivable.toFixed(0)}*/}
+                {formatBDT(receivable)}
               </Text>
               <Text style={[s.statLabel, {color: "#991b1b", fontFamily: 'HindSiliguriSemiBold'}]}>মোট পাওয়ানা</Text>
             </View>
           </View>
+
           <View style={[s.statCard]}>
+            <Pressable hitSlop={20} onPress={() => router.push({
+              pathname: '/products/purchaseorder'
+            })}>
             <View style={[s.statIcon, {backgroundColor: '#fee2e2'}]}>
               <TrendingDown size={18} color="#991b1b"/>
             </View>
+            </Pressable>
             <View>
               <Text style={[s.statValue, {color: '#991b1b'}]}>
-                ৳{payable >= 1000 ? `${(payable / 1000).toFixed(1)}k` : payable.toFixed(0)}
+                {/*৳{payable >= 1000 ? `${(payable / 1000).toFixed(1)}k` : payable.toFixed(0)}*/}
+                {formatBDT(payable)}
               </Text>
-              <Text style={[s.statLabel, {color: '#991b1b', fontFamily: 'HindSiliguriSemiBold' }]}>মোট ঋণ</Text>
+              <Text style={[s.statLabel, {color: '#991b1b', fontFamily: 'HindSiliguriSemiBold'}]}>মোট ঋণ</Text>
             </View>
           </View>
         </View>
@@ -410,7 +411,7 @@ const s = StyleSheet.create({
     marginBottom: 4,
   },
   statValue: {
-    fontSize: 26,
+    fontSize: 22,
     fontFamily: "InterBold",
     letterSpacing: -0.5,
   },

@@ -1,0 +1,37 @@
+export function formatBDT(number: number) {
+  // remove decimal
+  const intValue = Math.trunc(number)
+
+  // handle negative
+  const isNegative = intValue < 0
+
+  // absolute string
+  let str = Math.abs(intValue).toString()
+
+  // if <= 3 digits
+  if (str.length <= 3) {
+    return `${isNegative ? '-' : ''}৳ ${str}`
+  }
+
+  // last 3 digits
+  const lastThree = str.slice(-3)
+
+  // remaining digits
+  let remaining = str.slice(0, -3)
+
+  // add spaces every 2 digits from right
+  const parts = []
+
+  while (remaining.length > 2) {
+    parts.unshift(remaining.slice(-2))
+    remaining = remaining.slice(0, -2)
+  }
+
+  if (remaining.length > 0) {
+    parts.unshift(remaining)
+  }
+
+  const formatted = `${parts.join(' ')} ${lastThree}`
+
+  return `${isNegative ? '-' : ''}৳ ${formatted}`
+}
