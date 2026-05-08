@@ -329,7 +329,7 @@ const EnhancedDashboardStats = withObservables([], () => ({
 
 export default function Dashboard() {
   return (
-    <BaseLayout head={<MainHeader/>} backgroundColor={'#F8F8F8'}>
+    <BaseLayout head={<MainHeader/>} backgroundColor={'#efefef'}>
       <EnhancedDashboardStats/>
     </BaseLayout>
   );
