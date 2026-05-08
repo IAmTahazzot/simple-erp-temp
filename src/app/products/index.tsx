@@ -30,14 +30,19 @@ function fuzzyScore(name: string, query: string): number {
 }
 
 // ─── ProductItem ──────────────────────────────────────────────────────────────
-const ProductItem = ({item,  inventory, onPress}: {
+const ProductItem = ({item,  inventory, onPress, filterMode}: {
   item: Product,
   inventory: Inventory[],
-  onPress: () => void
+  onPress: () => void,
+  filterMode: 'all' | 'low' | 'none',
 }) => {
   const stock = inventory[0]?.quantity ?? 0
   const isLowStock = stock < (inventory[0]?.lowStockThreshold || 1)
 
+  if (filterMode === 'low' && !isLowStock) return null
+  if (filterMode === 'low' && stock < 1) return null
+  if (filterMode === 'none' && stock !== 0) return null
+  
   return (
     <Pressable
       style={({pressed}) => [
@@ -73,25 +78,30 @@ function Products({products}: { products: Product[] }) {
   const [isUpdateModalVisible, setIsUpdateModalVisible] = useState(false);
   const [activeProduct, setActiveProduct] = useState<Product>(products[0]);
   const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<'all' | 'low' | 'none'>('all')
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return products
-    return products
-      .map((p) => ({p, score: fuzzyScore(p.name, query.trim())}))
-      .filter(({score}) => score >= MIN_SCORE)
-      .sort((a, b) => b.score - a.score)
-      .map(({p}) => p)
+    let list = products
+    if (query.trim()) {
+      list = list
+        .map((p) => ({p, score: fuzzyScore(p.name, query.trim())}))
+        .filter(({score}) => score >= MIN_SCORE)
+        .sort((a, b) => b.score - a.score)
+        .map(({p}) => p)
+    }
+    return list
   }, [products, query])
 
   const renderItem = useCallback(({item}: { item: Product }) => (
     <EnhancedProductItem
       item={item}
+      filterMode={filter}
       onPress={() => {
         setActiveProduct(item)
         setIsUpdateModalVisible(true)
       }}
     />
-  ), []);
+  ), [filter]);
 
   return (
     <View style={{flex: 1}}>
@@ -108,6 +118,25 @@ function Products({products}: { products: Product[] }) {
           onChangeText={setQuery}
           style={{fontFamily: 'InterRegular', fontSize: 16, color: '#333333', flex: 1}}
         />
+      </View>
+
+      <View style={{flexDirection: 'row', gap: 8, paddingHorizontal: 12, marginBottom: 8}}>
+        {(['all', 'low', 'none'] as const).map((f) => (
+          <Pressable
+            key={f}
+            onPress={() => setFilter(f)}
+            style={{
+              paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20,
+              backgroundColor: filter === f ? '#111827' : '#f0f0f0',
+            }}>
+            <Text style={{
+              fontFamily: 'InterMedium', fontSize: 13,
+              color: filter === f ? '#fff' : '#374151',
+            }}>
+              {f === 'all' ? 'All' : f === 'low' ? 'Low Stock' : 'No Stock'}
+            </Text>
+          </Pressable>
+        ))}
       </View>
 
       <FlatList
